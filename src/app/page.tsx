@@ -1,417 +1,378 @@
+import {
+  Upload,
+  Palette,
+  Sparkles,
+  Camera,
+  Clock,
+  Users,
+  Repeat,
+  Check,
+  ArrowRight,
+  Star,
+  Zap,
+  Shield,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Mail,
+} from "lucide-react";
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
-      {/* ─── NAVBAR ─── */}
+    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
+      {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#d4a574] to-[#b8895a] flex items-center justify-center">
-              <svg className="w-4 h-4 text-[#0a0a0a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-              </svg>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#d4a574] to-[#c9956b] flex items-center justify-center">
+              <Camera className="w-4 h-4 text-[#0a0a0a]" />
             </div>
-            <span className="text-lg font-bold tracking-tight">
+            <span className="text-lg font-semibold tracking-tight">
               Room<span className="text-[#d4a574]">Vision</span>
             </span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-white/60">
-            <a href="#workflow" className="hover:text-white transition-colors">Comment ça marche</a>
-            <a href="#benefits" className="hover:text-white transition-colors">Avantages</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Tarifs</a>
+            <a href="#fonctionnalites" className="hover:text-white transition-colors">
+              FonctionnalitÃ©s
+            </a>
+            <a href="#comment-ca-marche" className="hover:text-white transition-colors">
+              Comment Ã§a marche
+            </a>
+            <a href="#tarifs" className="hover:text-white transition-colors">
+              Tarifs
+            </a>
           </div>
           <div className="flex items-center gap-3">
-            <a href="#pricing" className="hidden sm:inline-flex text-sm text-white/70 hover:text-white transition-colors">
-              Connexion
-            </a>
-            <a
-              href="#pricing"
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#d4a574] text-[#0a0a0a] hover:bg-[#e8c9a0] transition-all duration-200"
-            >
+            <button className="text-sm text-white/60 hover:text-white transition-colors px-4 py-2">
+              Se connecter
+            </button>
+            <button className="text-sm bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-5 py-2 rounded-full hover:opacity-90 transition-opacity">
               Essai gratuit
-            </a>
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* ─── HERO ─── */}
-      <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28">
-        {/* Background radial glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full blur-3xl pointer-events-none" style={{background: 'radial-gradient(circle, rgba(212,165,116,0.08) 0%, transparent 70%)'}} />
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 px-6">
+        {/* Ambient glow */}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[#d4a574]/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-40 left-1/4 w-[300px] h-[300px] bg-[#d4a574]/3 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="relative max-w-5xl mx-auto px-6 text-center">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#d4a574]/20 bg-[#d4a574]/5 text-[#d4a574] text-xs font-medium tracking-wide uppercase mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#d4a574] animate-pulse" />
-            Propulsé par l&apos;IA générative
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#d4a574]/20 bg-[#d4a574]/5 text-[#d4a574] text-xs font-medium mb-8 tracking-wide uppercase">
+            <Sparkles className="w-3.5 h-3.5" />
+            PropulsÃ© par l&apos;intelligence artificielle
           </div>
 
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.08] mb-6">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-6">
             Transformez vos espaces
             <br />
-            <span className="gradient-text">avec l&apos;IA</span>
+            <span className="bg-gradient-to-r from-[#d4a574] via-[#e8c9a0] to-[#c9956b] bg-clip-text text-transparent">
+              avec l&apos;IA
+            </span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="max-w-2xl mx-auto text-lg sm:text-xl text-white/50 leading-relaxed mb-10">
-            De la photo au rendu réaliste en quelques secondes.
-            <br className="hidden sm:block" />
-            Uploadez une pièce, ajoutez un moodboard — l&apos;IA fait le reste.
+          <p className="text-lg sm:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
+            De la photo au rendu rÃ©aliste en quelques secondes. L&apos;outil des
+            designers d&apos;intÃ©rieur qui veulent impressionner leurs clients.
           </p>
 
-          {/* CTA */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="#pricing"
-              className="w-full sm:w-auto px-8 py-4 text-base font-semibold rounded-xl bg-[#d4a574] text-[#0a0a0a] hover:bg-[#e8c9a0] transition-all duration-300 shadow-lg shadow-[#d4a574]/20 hover:shadow-[#d4a574]/30 hover:scale-[1.02] text-center"
-            >
-              Commencer gratuitement
-            </a>
-            <a
-              href="#workflow"
-              className="w-full sm:w-auto px-8 py-4 text-base font-medium rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/20 transition-all duration-300 text-center"
-            >
-              Voir la démo
-            </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <button className="group flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-8 py-3.5 rounded-full text-base hover:opacity-90 transition-all hover:shadow-[0_0_40px_rgba(212,165,116,0.3)]">
+              Essai gratuit â 14 jours
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+            <button className="flex items-center gap-2 text-white/60 hover:text-white px-6 py-3.5 rounded-full border border-white/10 hover:border-white/20 transition-all text-base">
+              Voir une dÃ©mo
+            </button>
           </div>
 
-          {/* Hero visual placeholder */}
-          <div className="mt-16 sm:mt-20 relative">
-            <div className="glow-amber rounded-2xl overflow-hidden border border-white/5">
-              <div className="aspect-[16/9] bg-gradient-to-br from-[#111] via-[#151515] to-[#111] rounded-2xl flex items-center justify-center relative">
-                <div className="absolute inset-4 sm:inset-8 rounded-xl border border-white/5 bg-[#0d0d0d] overflow-hidden">
-                  <div className="h-10 border-b border-white/5 flex items-center px-4 gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                    <div className="ml-4 h-5 w-48 bg-white/5 rounded-md" />
+          {/* Mock Preview */}
+          <div className="relative max-w-4xl mx-auto">
+            <div className="relative rounded-2xl border border-white/10 bg-[#111] overflow-hidden shadow-2xl shadow-black/50">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+                <div className="w-3 h-3 rounded-full bg-white/10" />
+                <div className="w-3 h-3 rounded-full bg-white/10" />
+                <div className="w-3 h-3 rounded-full bg-white/10" />
+                <div className="flex-1 mx-8">
+                  <div className="h-5 bg-white/5 rounded-md max-w-xs mx-auto" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 p-6">
+                <div className="aspect-[4/3] rounded-xl bg-gradient-to-br from-white/5 to-white/[0.02] flex items-center justify-center border border-white/5">
+                  <div className="text-center">
+                    <Upload className="w-8 h-8 text-white/20 mx-auto mb-2" />
+                    <span className="text-xs text-white/30">Photo originale</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 p-4 sm:p-8">
-                    <div className="relative aspect-[4/3] bg-[#1a1a1a] rounded-lg flex flex-col items-center justify-center border border-white/5">
-                      <svg className="w-8 h-8 sm:w-12 sm:h-12 text-white/10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="text-[10px] sm:text-xs text-white/20 font-medium">PHOTO ORIGINALE</span>
-                    </div>
-                    <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-[#d4a574]/20 bg-gradient-to-br from-[#1a1510] to-[#14110d]">
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-[#d4a574]/30 flex items-center justify-center mb-2">
-                          <svg className="w-4 h-4 sm:w-6 sm:h-6 text-[#d4a574]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                          </svg>
-                        </div>
-                        <span className="text-[10px] sm:text-xs text-[#d4a574]/60 font-medium">RENDU IA</span>
-                      </div>
-                    </div>
+                </div>
+                <div className="aspect-[4/3] rounded-xl bg-gradient-to-br from-[#d4a574]/10 to-[#d4a574]/[0.02] flex items-center justify-center border border-[#d4a574]/10">
+                  <div className="text-center">
+                    <Sparkles className="w-8 h-8 text-[#d4a574]/40 mx-auto mb-2" />
+                    <span className="text-xs text-[#d4a574]/50">Rendu IA</span>
                   </div>
                 </div>
               </div>
             </div>
+            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-12 bg-[#d4a574]/10 blur-2xl rounded-full" />
           </div>
+        </div>
+      </section>
 
-          {/* Social proof */}
-          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-white/30">
-            <div className="flex -space-x-2">
-              {[0,1,2,3,4].map((i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full border-2 border-[#0a0a0a]"
-                  style={{ background: `hsl(${30 + i * 8}, 50%, ${35 + i * 5}%)` }}
-                />
-              ))}
+      {/* Stats Bar */}
+      <section className="py-12 border-y border-white/5 bg-[#0d0d0d]">
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+          {[
+            { value: "+2 000", label: "rendus gÃ©nÃ©rÃ©s", icon: Zap },
+            { value: "98%", label: "de satisfaction client", icon: Star },
+            { value: "30s", label: "par gÃ©nÃ©ration", icon: Clock },
+          ].map((stat) => (
+            <div key={stat.label} className="flex flex-col items-center gap-2">
+              <stat.icon className="w-5 h-5 text-[#d4a574]/60 mb-1" />
+              <div className="text-3xl font-bold tracking-tight">{stat.value}</div>
+              <div className="text-sm text-white/40">{stat.label}</div>
             </div>
-            <span>+2 400 designers et architectes nous font confiance</span>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* ─── LOGOS BAR ─── */}
-      <section className="border-y border-white/5 py-8">
-        <div className="max-w-5xl mx-auto px-6">
-          <p className="text-center text-xs text-white/20 uppercase tracking-widest mb-6">
-            Ils utilisent RoomVision
-          </p>
-          <div className="flex items-center justify-center gap-10 sm:gap-16 opacity-20">
-            {["Studio A", "Maison&Co", "ArchLab", "InteriorPro", "DesignHQ"].map(
-              (name) => (
-                <span key={name} className="text-sm sm:text-base font-medium tracking-wide whitespace-nowrap">
-                  {name}
-                </span>
-              )
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── WORKFLOW ─── */}
-      <section id="workflow" className="py-24 sm:py-32 relative">
-        <div className="max-w-5xl mx-auto px-6">
+      {/* How it Works */}
+      <section id="comment-ca-marche" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-[#d4a574] text-sm font-medium uppercase tracking-widest mb-4">
-              Comment ça marche
+            <p className="text-[#d4a574] text-sm font-medium tracking-widest uppercase mb-3">
+              Comment Ã§a marche
             </p>
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight">
-              Trois étapes. Résultats époustouflants.
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Trois Ã©tapes. C&apos;est tout.
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
                 step: "01",
-                title: "Uploadez votre photo",
+                icon: Upload,
+                title: "Uploadez la photo",
                 description:
-                  "Prenez une photo de la pièce à transformer. Salon, chambre, bureau — tout espace fonctionne.",
-                icon: (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                  />
-                ),
+                  "Prenez en photo ou importez l'image de la piÃ¨ce que vous souhaitez transformer. Tout format acceptÃ©.",
               },
               {
                 step: "02",
-                title: "Décrivez votre vision",
+                icon: Palette,
+                title: "Ajoutez vos rÃ©fÃ©rences",
                 description:
-                  "Ajoutez un moodboard, des références ou décrivez le style souhaité. L&apos;IA comprend votre intention.",
-                icon: (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"
-                  />
-                ),
+                  "Partagez votre moodboard, vos inspirations et le style dÃ©sirÃ©. L'IA comprend votre vision crÃ©ative.",
               },
               {
                 step: "03",
-                title: "Recevez vos rendus",
+                icon: Sparkles,
+                title: "GÃ©nÃ©rez les rendus",
                 description:
-                  "En quelques secondes, l&apos;IA génère des visualisations photoréalistes de votre espace transformé.",
-                icon: (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
-                  />
-                ),
+                  "L'IA gÃ©nÃ¨re des visualisations ultra-rÃ©alistes de votre projet. ItÃ©rez jusqu'Ã  la perfection.",
               },
             ].map((item) => (
               <div
                 key={item.step}
-                className="group relative p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-[#d4a574]/10 transition-all duration-500"
+                className="group relative p-8 rounded-2xl border border-white/5 bg-[#111]/50 hover:border-[#d4a574]/20 transition-all duration-500 hover:bg-[#111]"
               >
-                <div className="flex items-center gap-4 mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-[#d4a574]/10 flex items-center justify-center group-hover:bg-[#d4a574]/15 transition-colors duration-300">
-                    <svg
-                      className="w-5 h-5 text-[#d4a574]"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      {item.icon}
-                    </svg>
-                  </div>
-                  <span className="text-xs font-mono text-white/20 tracking-wider">
-                    {item.step}
-                  </span>
+                <div className="absolute top-6 right-6 text-6xl font-bold text-white/[0.03] select-none">
+                  {item.step}
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-[#d4a574]/10 flex items-center justify-center mb-5 group-hover:bg-[#d4a574]/15 transition-colors">
+                  <item.icon className="w-5 h-5 text-[#d4a574]" />
                 </div>
                 <h3 className="text-lg font-semibold mb-3">{item.title}</h3>
-                <p className="text-sm text-white/40 leading-relaxed">
-                  {item.description}
-                </p>
+                <p className="text-sm text-white/40 leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── BENEFITS ─── */}
-      <section id="benefits" className="py-24 sm:py-32 border-t border-white/5 relative">
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none" style={{background: 'radial-gradient(circle, rgba(212,165,116,0.05) 0%, transparent 70%)'}} />
-
-        <div className="relative max-w-5xl mx-auto px-6">
+      {/* Benefits */}
+      <section id="fonctionnalites" className="py-24 px-6 bg-[#0d0d0d]">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-[#d4a574] text-sm font-medium uppercase tracking-widest mb-4">
+            <p className="text-[#d4a574] text-sm font-medium tracking-widest uppercase mb-3">
               Pourquoi RoomVision
             </p>
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight">
-              L&apos;avantage compétitif des professionnels
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Vos projets mÃ©ritent le meilleur
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {[
               {
-                title: "10x plus rapide",
+                icon: Camera,
+                title: "Projections ultra-rÃ©alistes",
                 description:
-                  "Ce qui prenait des heures en 3D se fait maintenant en secondes. Proposez plus de variantes, plus vite.",
-                metric: "< 30s",
-                metricLabel: "par rendu",
+                  "Des rendus photorÃ©alistes que vos clients ne distingueront pas de vraies photos. QualitÃ© studio, en quelques secondes.",
               },
               {
-                title: "Photoréalisme IA",
+                icon: Clock,
+                title: "Gain de temps Ã10",
                 description:
-                  "Des rendus d&apos;une qualité suffisante pour convaincre vos clients. Textures, lumière, ombres — tout y est.",
-                metric: "4K",
-                metricLabel: "résolution",
+                  "Ce qui prenait des heures de modÃ©lisation 3D se fait maintenant en 30 secondes. Concentrez-vous sur la crÃ©ativitÃ©.",
               },
               {
+                icon: Users,
                 title: "Impressionnez vos clients",
                 description:
-                  "Montrez le résultat final avant même de commencer les travaux. Augmentez votre taux de conversion.",
-                metric: "+68%",
-                metricLabel: "conversion",
+                  "PrÃ©sentez des visualisations Ã©poustouflantes dÃ¨s le premier rendez-vous. Augmentez votre taux de conversion.",
               },
               {
-                title: "Multi-styles",
+                icon: Repeat,
+                title: "ItÃ©rations illimitÃ©es",
                 description:
-                  "Scandinave, industriel, bohème, classique... Explorez tous les styles en un clic pour chaque espace.",
-                metric: "50+",
-                metricLabel: "styles",
+                  "Changez de style, de couleurs, de mobilier en un clic. Explorez toutes les possibilitÃ©s sans contrainte.",
               },
             ].map((benefit) => (
               <div
                 key={benefit.title}
-                className="p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-[#d4a574]/10 transition-all duration-500 group"
+                className="group flex gap-5 p-6 rounded-2xl border border-white/5 hover:border-[#d4a574]/15 transition-all duration-500 bg-[#0a0a0a] hover:bg-[#111]/80"
               >
-                <div className="flex items-start justify-between mb-6">
-                  <h3 className="text-lg font-semibold">{benefit.title}</h3>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold gradient-text">
-                      {benefit.metric}
-                    </p>
-                    <p className="text-xs text-white/30">{benefit.metricLabel}</p>
-                  </div>
+                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#d4a574]/10 flex items-center justify-center group-hover:bg-[#d4a574]/15 transition-colors">
+                  <benefit.icon className="w-5 h-5 text-[#d4a574]" />
                 </div>
-                <p className="text-sm text-white/40 leading-relaxed">
-                  {benefit.description}
-                </p>
+                <div>
+                  <h3 className="text-base font-semibold mb-1.5">{benefit.title}</h3>
+                  <p className="text-sm text-white/40 leading-relaxed">{benefit.description}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── PRICING ─── */}
-      <section id="pricing" className="py-24 sm:py-32 border-t border-white/5 relative">
-        <div className="max-w-5xl mx-auto px-6">
+      {/* Social Proof */}
+      <section className="py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-1 mb-4">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-5 h-5 fill-[#d4a574] text-[#d4a574]" />
+            ))}
+          </div>
+          <blockquote className="text-xl sm:text-2xl font-medium leading-relaxed text-white/80 mb-6 max-w-3xl mx-auto">
+            &ldquo;RoomVision a rÃ©volutionnÃ© ma faÃ§on de prÃ©senter les projets Ã  mes
+            clients. Les rendus sont bluffants et je gagne un temps fou.&rdquo;
+          </blockquote>
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#d4a574] to-[#c9956b] flex items-center justify-center text-[#0a0a0a] text-sm font-bold">
+              SL
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-medium">Sophie Laurent</div>
+              <div className="text-xs text-white/40">Architecte d&apos;intÃ©rieur, Paris</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="tarifs" className="py-24 px-6 bg-[#0d0d0d]">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-[#d4a574] text-sm font-medium uppercase tracking-widest mb-4">
+            <p className="text-[#d4a574] text-sm font-medium tracking-widest uppercase mb-3">
               Tarifs
             </p>
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
               Choisissez votre plan
             </h2>
-            <p className="text-white/40 text-lg">
-              Commencez gratuitement, évoluez selon vos besoins.
+            <p className="text-white/40 text-base">
+              14 jours d&apos;essai gratuit sur tous les plans. Sans engagement.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
               {
                 name: "Starter",
-                price: "0",
-                period: "gratuit",
-                description: "Pour découvrir RoomVision",
+                price: "29",
+                description: "Pour les designers indÃ©pendants",
+                renders: "50 rendus / mois",
                 features: [
-                  "5 rendus / mois",
-                  "Résolution standard",
-                  "3 styles disponibles",
-                  "Support communauté",
+                  "RÃ©solution HD",
+                  "5 styles prÃ©dÃ©finis",
+                  "Export PNG & JPG",
+                  "Support email",
                 ],
-                cta: "Commencer gratuitement",
                 popular: false,
               },
               {
                 name: "Pro",
-                price: "29",
-                period: "/ mois",
-                description: "Pour les professionnels",
+                price: "79",
+                description: "Pour les studios de design",
+                renders: "200 rendus / mois",
                 features: [
-                  "100 rendus / mois",
-                  "Résolution 4K",
-                  "Tous les styles",
-                  "Moodboard illimité",
-                  "Export haute qualité",
+                  "RÃ©solution 4K",
+                  "Styles illimitÃ©s",
+                  "Export tous formats",
                   "Support prioritaire",
+                  "API access",
+                  "Moodboard intÃ©grÃ©",
                 ],
-                cta: "Essai gratuit 14 jours",
                 popular: true,
               },
               {
                 name: "Studio",
-                price: "79",
-                period: "/ mois",
-                description: "Pour les agences et studios",
+                price: "199",
+                description: "Pour les agences & entreprises",
+                renders: "Rendus illimitÃ©s",
                 features: [
-                  "Rendus illimités",
-                  "Résolution 4K+",
-                  "Tous les styles",
-                  "API & intégrations",
-                  "Branding personnalisé",
-                  "Manager de compte dédié",
-                  "Facturation entreprise",
+                  "RÃ©solution 8K",
+                  "Styles personnalisÃ©s",
+                  "White label",
+                  "Support dÃ©diÃ© 24/7",
+                  "API illimitÃ©e",
+                  "Collaboration Ã©quipe",
+                  "Analytics avancÃ©s",
                 ],
-                cta: "Contacter l&apos;équipe",
                 popular: false,
               },
             ].map((plan) => (
               <div
                 key={plan.name}
-                className={`relative p-8 rounded-2xl border transition-all duration-500 ${
+                className={`relative flex flex-col p-8 rounded-2xl border transition-all duration-500 ${
                   plan.popular
-                    ? "border-[#d4a574]/30 bg-[#d4a574]/[0.03] glow-amber scale-[1.02]"
-                    : "border-white/5 bg-white/[0.02] hover:border-white/10"
+                    ? "border-[#d4a574]/30 bg-[#111] shadow-[0_0_60px_-15px_rgba(212,165,116,0.15)]"
+                    : "border-white/5 bg-[#0a0a0a] hover:border-white/10"
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#d4a574] text-[#0a0a0a] text-xs font-bold uppercase tracking-wider">
-                    Populaire
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] text-xs font-semibold rounded-full">
+                    Le plus populaire
                   </div>
                 )}
-                <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
-                <p className="text-sm text-white/30 mb-6">{plan.description}</p>
-                <div className="flex items-baseline gap-1 mb-8">
-                  <span className="text-4xl font-bold">{plan.price}€</span>
-                  <span className="text-sm text-white/30">{plan.period}</span>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
+                  <p className="text-sm text-white/40">{plan.description}</p>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold">{plan.price}â¬</span>
+                    <span className="text-white/40 text-sm">/mois</span>
+                  </div>
+                  <p className="text-sm text-[#d4a574]/70 mt-1.5">{plan.renders}</p>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
                   {plan.features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-center gap-3 text-sm text-white/50"
-                    >
-                      <svg
-                        className={`w-4 h-4 flex-shrink-0 ${
-                          plan.popular ? "text-[#d4a574]" : "text-white/20"
-                        }`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4.5 12.75l6 6 9-13.5"
-                        />
-                      </svg>
+                    <li key={feature} className="flex items-center gap-2.5 text-sm text-white/60">
+                      <Check className="w-4 h-4 text-[#d4a574] flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
                 <button
-                  className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  className={`w-full py-3 rounded-full text-sm font-semibold transition-all ${
                     plan.popular
-                      ? "bg-[#d4a574] text-[#0a0a0a] hover:bg-[#e8c9a0] shadow-lg shadow-[#d4a574]/20"
-                      : "border border-white/10 text-white/70 hover:text-white hover:border-white/20"
+                      ? "bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] hover:opacity-90 hover:shadow-[0_0_30px_rgba(212,165,116,0.2)]"
+                      : "border border-white/10 text-white hover:border-[#d4a574]/30 hover:text-[#d4a574]"
                   }`}
                 >
-                  {plan.cta}
+                  Commencer l&apos;essai gratuit
                 </button>
               </div>
             ))}
@@ -419,51 +380,98 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── FINAL CTA ─── */}
-      <section className="py-24 sm:py-32 border-t border-white/5 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#d4a574]/[0.02] to-transparent pointer-events-none" />
-        <div className="relative max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-6">
-            Prêt à transformer vos espaces ?
+      {/* Final CTA */}
+      <section className="py-24 px-6 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0d0d0d] via-[#0a0a0a] to-[#0a0a0a]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#d4a574]/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#d4a574]/20 bg-[#d4a574]/5 text-[#d4a574] text-xs font-medium mb-6">
+            <Shield className="w-3.5 h-3.5" />
+            14 jours gratuits â Sans carte bancaire
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-5">
+            PrÃªt Ã  transformer
+            <br />
+            <span className="bg-gradient-to-r from-[#d4a574] to-[#c9956b] bg-clip-text text-transparent">
+              votre workflow ?
+            </span>
           </h2>
-          <p className="text-lg text-white/40 mb-10 max-w-xl mx-auto">
-            Rejoignez des milliers de professionnels du design qui utilisent
-            RoomVision pour impressionner leurs clients.
+          <p className="text-white/40 text-lg mb-8 max-w-xl mx-auto">
+            Rejoignez les designers qui ont dÃ©jÃ  adoptÃ© RoomVision pour impressionner
+            leurs clients.
           </p>
-          <a
-            href="#pricing"
-            className="inline-flex px-10 py-4 text-base font-semibold rounded-xl bg-[#d4a574] text-[#0a0a0a] hover:bg-[#e8c9a0] transition-all duration-300 shadow-lg shadow-[#d4a574]/20 hover:shadow-[#d4a574]/30 hover:scale-[1.02]"
-          >
-            Démarrer mon essai gratuit
-          </a>
+          <button className="group inline-flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-8 py-4 rounded-full text-base hover:opacity-90 transition-all hover:shadow-[0_0_50px_rgba(212,165,116,0.3)]">
+            DÃ©marrer gratuitement
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </button>
         </div>
       </section>
 
-      {/* ─── FOOTER ─── */}
-      <footer className="border-t border-white/5 py-12">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-[#d4a574] to-[#b8895a] flex items-center justify-center">
-                <svg className="w-3 h-3 text-[#0a0a0a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-                </svg>
+      {/* Footer */}
+      <footer className="border-t border-white/5 py-12 px-6 bg-[#0a0a0a]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#d4a574] to-[#c9956b] flex items-center justify-center">
+                  <Camera className="w-3.5 h-3.5 text-[#0a0a0a]" />
+                </div>
+                <span className="text-base font-semibold">
+                  Room<span className="text-[#d4a574]">Vision</span>
+                </span>
               </div>
-              <span className="text-sm font-semibold">
-                Room<span className="text-[#d4a574]">Vision</span>
-              </span>
+              <p className="text-sm text-white/30 leading-relaxed">
+                L&apos;IA au service du design d&apos;intÃ©rieur.
+              </p>
             </div>
-            <div className="flex items-center gap-8 text-xs text-white/30">
-              <a href="#" className="hover:text-white/60 transition-colors">Mentions légales</a>
-              <a href="#" className="hover:text-white/60 transition-colors">Confidentialité</a>
-              <a href="#" className="hover:text-white/60 transition-colors">Contact</a>
+            <div>
+              <h4 className="text-sm font-semibold mb-4 text-white/70">Produit</h4>
+              <ul className="space-y-2.5 text-sm text-white/30">
+                <li><a href="#" className="hover:text-white/60 transition-colors">FonctionnalitÃ©s</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Tarifs</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Exemples</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">API</a></li>
+              </ul>
             </div>
-            <p className="text-xs text-white/20">
-              © 2026 RoomVision. Tous droits réservés.
+            <div>
+              <h4 className="text-sm font-semibold mb-4 text-white/70">Entreprise</h4>
+              <ul className="space-y-2.5 text-sm text-white/30">
+                <li><a href="#" className="hover:text-white/60 transition-colors">Ã propos</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">CarriÃ¨res</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold mb-4 text-white/70">LÃ©gal</h4>
+              <ul className="space-y-2.5 text-sm text-white/30">
+                <li><a href="#" className="hover:text-white/60 transition-colors">ConfidentialitÃ©</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">CGU</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Mentions lÃ©gales</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between pt-8 border-t border-white/5 gap-4">
+            <p className="text.xs text-white/20">
+              Â© 2026 RoomVision. Tous droits rÃ©servÃ©s.
             </p>
+            <div className="flex items-center gap-4">
+              <a href="#" className="text-white/20 hover:text-[#d4a574] transition-colors">
+                <Twitter className="w-4 h-4" />
+              </a>
+              <a href="#" className="text-white/20 hover:text-[#d4a574] transition-colors">
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a href="#" className="text-white/20 hover:text-[#d4a574] transition-colors">
+                <Linkedin className="w-4 h-4" />
+              </a>
+              <a href="#" className="text-white/20 hover:text-[#d4a574] transition-colors">
+                <Mail className="w-4 h-4" />
+              </a>
+            </div>
           </div>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
