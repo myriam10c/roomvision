@@ -34,10 +34,10 @@ export default function Home() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-white/60">
             <a href="#fonctionnalites" className="hover:text-white transition-colors">
-              FonctionnalitÃ©s
+              Fonctionnalités
             </a>
             <a href="#comment-ca-marche" className="hover:text-white transition-colors">
-              Comment Ã§a marche
+              Comment ça marche
             </a>
             <a href="#tarifs" className="hover:text-white transition-colors">
               Tarifs
@@ -64,7 +64,7 @@ export default function Home() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#d4a574]/20 bg-[#d4a574]/5 text-[#d4a574] text-xs font-medium mb-8 tracking-wide uppercase">
             <Sparkles className="w-3.5 h-3.5" />
-            PropulsÃ© par l&apos;intelligence artificielle
+            Propulsé par l&apos;intelligence artificielle
           </div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-6">
@@ -76,17 +76,17 @@ export default function Home() {
           </h1>
 
           <p className="text-lg sm:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
-            De la photo au rendu rÃ©aliste en quelques secondes. L&apos;outil des
-            designers d&apos;intÃ©rieur qui veulent impressionner leurs clients.
+            De la photo au rendu réaliste en quelques secondes. L&apos;outil des
+            designers d&apos;intérieur qui veulent impressionner leurs clients.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <button className="group flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-8 py-3.5 rounded-full text-base hover:opacity-90 transition-all hover:shadow-[0_0_40px_rgba(212,165,116,0.3)]">
-              Essai gratuit â 14 jours
+              Essai gratuit — 14 jours
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
             <button className="flex items-center gap-2 text-white/60 hover:text-white px-6 py-3.5 rounded-full border border-white/10 hover:border-white/20 transition-all text-base">
-              Voir une dÃ©mo
+              Voir une démo
             </button>
           </div>
 
@@ -125,9 +125,9 @@ export default function Home() {
       <section className="py-12 border-y border-white/5 bg-[#0d0d0d]">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
           {[
-            { value: "+2 000", label: "rendus gÃ©nÃ©rÃ©s", icon: Zap },
+            { value: "+2 000", label: "rendus générés", icon: Zap },
             { value: "98%", label: "de satisfaction client", icon: Star },
-            { value: "30s", label: "par gÃ©nÃ©ration", icon: Clock },
+            { value: "30s", label: "par génération", icon: Clock },
           ].map((stat) => (
             <div key={stat.label} className="flex flex-col items-center gap-2">
               <stat.icon className="w-5 h-5 text-[#d4a574]/60 mb-1" />
@@ -143,10 +143,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-[#d4a574] text-sm font-medium tracking-widest uppercase mb-3">
-              Comment Ã§a marche
+              Comment ça marche
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Trois Ã©tapes. C&apos;est tout.
+              Trois étapes. C&apos;est tout.
             </h2>
           </div>
 
@@ -157,21 +157,21 @@ export default function Home() {
                 icon: Upload,
                 title: "Uploadez la photo",
                 description:
-                  "Prenez en photo ou importez l'image de la piÃ¨ce que vous souhaitez transformer. Tout format acceptÃ©.",
+                  "Prenez en photo ou importez l'image de la pièce que vous souhaitez transformer. Tout format accepté.",
               },
               {
                 step: "02",
                 icon: Palette,
-                title: "Ajoutez vos rÃ©fÃ©rences",
+                title: "Ajoutez vos références",
                 description:
-                  "Partagez votre moodboard, vos inspirations et le style dÃ©sirÃ©. L'IA comprend votre vision crÃ©ative.",
+                  "Partagez votre moodboard, vos inspirations et le style désiré. L'IA comprend votre vision créative.",
               },
               {
                 step: "03",
                 icon: Sparkles,
-                title: "GÃ©nÃ©rez les rendus",
+                title: "Générez les rendus",
                 description:
-                  "L'IA gÃ©nÃ¨re des visualisations ultra-rÃ©alistes de votre projet. ItÃ©rez jusqu'Ã  la perfection.",
+                  "L'IA génère des visualisations ultra-réalistes de votre projet. Itérez jusqu'à la perfection.",
               },
             ].map((item) => (
               <div
@@ -200,7 +200,7 @@ export default function Home() {
               Pourquoi RoomVision
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Vos projets mÃ©ritent le meilleur
+              Vos projets méritent le meilleur
             </h2>
           </div>
 
@@ -208,27 +208,27 @@ export default function Home() {
             {[
               {
                 icon: Camera,
-                title: "Projections ultra-rÃ©alistes",
+                title: "Projections ultra-réalistes",
                 description:
-                  "Des rendus photorÃ©alistes que vos clients ne distingueront pas de vraies photos. QualitÃ© studio, en quelques secondes.",
+                  "Des rendus photoréalistes que vos clients ne distingueront pas de vraies photos. Qualité studio, en quelques secondes.",
               },
               {
                 icon: Clock,
-                title: "Gain de temps Ã10",
+                title: "Gain de temps ×10",
                 description:
-                  "Ce qui prenait des heures de modÃ©lisation 3D se fait maintenant en 30 secondes. Concentrez-vous sur la crÃ©ativitÃ©.",
+                  "Ce qui prenait des heures de modélisation 3D se fait maintenant en 30 secondes. Concentrez-vous sur la créativité.",
               },
               {
                 icon: Users,
                 title: "Impressionnez vos clients",
                 description:
-                  "PrÃ©sentez des visualisations Ã©poustouflantes dÃ¨s le premier rendez-vous. Augmentez votre taux de conversion.",
+                  "Présentez des visualisations époustouflantes dès le premier rendez-vous. Augmentez votre taux de conversion.",
               },
               {
                 icon: Repeat,
-                title: "ItÃ©rations illimitÃ©es",
+                title: "Itérations illimitées",
                 description:
-                  "Changez de style, de couleurs, de mobilier en un clic. Explorez toutes les possibilitÃ©s sans contrainte.",
+                  "Changez de style, de couleurs, de mobilier en un clic. Explorez toutes les possibilités sans contrainte.",
               },
             ].map((benefit) => (
               <div
@@ -257,7 +257,7 @@ export default function Home() {
             ))}
           </div>
           <blockquote className="text-xl sm:text-2xl font-medium leading-relaxed text-white/80 mb-6 max-w-3xl mx-auto">
-            &ldquo;RoomVision a rÃ©volutionnÃ© ma faÃ§on de prÃ©senter les projets Ã  mes
+            &ldquo;RoomVision a révolutionné ma façon de présenter les projets à mes
             clients. Les rendus sont bluffants et je gagne un temps fou.&rdquo;
           </blockquote>
           <div className="flex items-center justify-center gap-3">
@@ -266,7 +266,7 @@ export default function Home() {
             </div>
             <div className="text-left">
               <div className="text-sm font-medium">Sophie Laurent</div>
-              <div className="text-xs text-white/40">Architecte d&apos;intÃ©rieur, Paris</div>
+              <div className="text-xs text-white/40">Architecte d&apos;intérieur, Paris</div>
             </div>
           </div>
         </div>
@@ -292,11 +292,11 @@ export default function Home() {
               {
                 name: "Starter",
                 price: "29",
-                description: "Pour les designers indÃ©pendants",
+                description: "Pour les designers indépendants",
                 renders: "50 rendus / mois",
                 features: [
-                  "RÃ©solution HD",
-                  "5 styles prÃ©dÃ©finis",
+                  "Résolution HD",
+                  "5 styles prédéfinis",
                   "Export PNG & JPG",
                   "Support email",
                 ],
@@ -308,12 +308,12 @@ export default function Home() {
                 description: "Pour les studios de design",
                 renders: "200 rendus / mois",
                 features: [
-                  "RÃ©solution 4K",
-                  "Styles illimitÃ©s",
+                  "Résolution 4K",
+                  "Styles illimités",
                   "Export tous formats",
                   "Support prioritaire",
                   "API access",
-                  "Moodboard intÃ©grÃ©",
+                  "Moodboard intégré",
                 ],
                 popular: true,
               },
@@ -321,15 +321,15 @@ export default function Home() {
                 name: "Studio",
                 price: "199",
                 description: "Pour les agences & entreprises",
-                renders: "Rendus illimitÃ©s",
+                renders: "Rendus illimités",
                 features: [
-                  "RÃ©solution 8K",
-                  "Styles personnalisÃ©s",
+                  "Résolution 8K",
+                  "Styles personnalisés",
                   "White label",
-                  "Support dÃ©diÃ© 24/7",
-                  "API illimitÃ©e",
-                  "Collaboration Ã©quipe",
-                  "Analytics avancÃ©s",
+                  "Support dédié 24/7",
+                  "API illimitée",
+                  "Collaboration équipe",
+                  "Analytics avancés",
                 ],
                 popular: false,
               },
@@ -353,7 +353,7 @@ export default function Home() {
                 </div>
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold">{plan.price}â¬</span>
+                    <span className="text-4xl font-bold">{plan.price}€</span>
                     <span className="text-white/40 text-sm">/mois</span>
                   </div>
                   <p className="text-sm text-[#d4a574]/70 mt-1.5">{plan.renders}</p>
@@ -388,21 +388,21 @@ export default function Home() {
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#d4a574]/20 bg-[#d4a574]/5 text-[#d4a574] text-xs font-medium mb-6">
             <Shield className="w-3.5 h-3.5" />
-            14 jours gratuits â Sans carte bancaire
+            14 jours gratuits — Sans carte bancaire
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-5">
-            PrÃªt Ã  transformer
+            Prêt à transformer
             <br />
             <span className="bg-gradient-to-r from-[#d4a574] to-[#c9956b] bg-clip-text text-transparent">
               votre workflow ?
             </span>
           </h2>
           <p className="text-white/40 text-lg mb-8 max-w-xl mx-auto">
-            Rejoignez les designers qui ont dÃ©jÃ  adoptÃ© RoomVision pour impressionner
+            Rejoignez les designers qui ont déjà adopté RoomVision pour impressionner
             leurs clients.
           </p>
           <button className="group inline-flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-8 py-4 rounded-full text-base hover:opacity-90 transition-all hover:shadow-[0_0_50px_rgba(212,165,116,0.3)]">
-            DÃ©marrer gratuitement
+            Démarrer gratuitement
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
@@ -422,13 +422,13 @@ export default function Home() {
                 </span>
               </div>
               <p className="text-sm text-white/30 leading-relaxed">
-                L&apos;IA au service du design d&apos;intÃ©rieur.
+                L&apos;IA au service du design d&apos;intérieur.
               </p>
             </div>
             <div>
               <h4 className="text-sm font-semibold mb-4 text-white/70">Produit</h4>
               <ul className="space-y-2.5 text-sm text-white/30">
-                <li><a href="#" className="hover:text-white/60 transition-colors">FonctionnalitÃ©s</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Fonctionnalités</a></li>
                 <li><a href="#" className="hover:text-white/60 transition-colors">Tarifs</a></li>
                 <li><a href="#" className="hover:text-white/60 transition-colors">Exemples</a></li>
                 <li><a href="#" className="hover:text-white/60 transition-colors">API</a></li>
@@ -437,24 +437,24 @@ export default function Home() {
             <div>
               <h4 className="text-sm font-semibold mb-4 text-white/70">Entreprise</h4>
               <ul className="space-y-2.5 text-sm text-white/30">
-                <li><a href="#" className="hover:text-white/60 transition-colors">Ã propos</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">À propos</a></li>
                 <li><a href="#" className="hover:text-white/60 transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white/60 transition-colors">CarriÃ¨res</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Carrières</a></li>
                 <li><a href="#" className="hover:text-white/60 transition-colors">Contact</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-semibold mb-4 text-white/70">LÃ©gal</h4>
+              <h4 className="text-sm font-semibold mb-4 text-white/70">Légal</h4>
               <ul className="space-y-2.5 text-sm text-white/30">
-                <li><a href="#" className="hover:text-white/60 transition-colors">ConfidentialitÃ©</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Confidentialité</a></li>
                 <li><a href="#" className="hover:text-white/60 transition-colors">CGU</a></li>
-                <li><a href="#" className="hover:text-white/60 transition-colors">Mentions lÃ©gales</a></li>
+                <li><a href="#" className="hover:text-white/60 transition-colors">Mentions légales</a></li>
               </ul>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between pt-8 border-t border-white/5 gap-4">
             <p className="text.xs text-white/20">
-              Â© 2026 RoomVision. Tous droits rÃ©servÃ©s.
+              © 2026 RoomVision. Tous droits réservés.
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-white/20 hover:text-[#d4a574] transition-colors">
