@@ -1,4 +1,5 @@
 import { 
+  // fix encoding
   Upload,
   Palette,
   Sparkles,
