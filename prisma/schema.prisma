@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?  @map("avatar_url")
+  plan      Plan     @default(FREE)
+  credits   Int      @default(3)
+  stripeCustomerId    String? @unique @map("stripe_customer_id")
+  stripeSubscriptionId String? @map("stripe_subscription_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  projects          Project[]
+  generations       Generation[]
+  creditTransactions CreditTransaction[]
+  favorites         Favorite[]
+  recipes           Recipe[]
+
+  @@map("users")
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  STUDIO
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  coverUrl    String?  @map("cover_url")
+  userId      String   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rooms Room[]
+
+  @@map("projects")
+}
+
+model Room {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  photoUrl    String?  @map("photo_url")
+  roomType    String?  @map("room_type")
+  projectId   String   @map("project_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  generations Generation[]
+
+  @@map("rooms")
+}
+
+model Generation {
+  id           String   @id @default(uuid())
+  prompt       String?
+  style        String?
+  moodboardUrl String?  @map("moodboard_url")
+  status       GenerationStatus @default(PENDING)
+  creditsUsed  Int      @default(1) @map("credits_used")
+  roomId       String   @map("room_id")
+  userId       String   @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  room     Room                @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variants GenerationVariant[]
+  favorites Favorite[]
+
+  @@map("generations")
+}
+
+enum GenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model GenerationVariant {
+  id           String   @id @default(uuid())
+  imageUrl     String   @map("image_url")
+  thumbnailUrl String?  @map("thumbnail_url")
+  generationId String   @map("generation_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  generation Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+
+  @@map("generation_variants")
+}
+
+model CreditTransaction {
+  id        String            @id @default(uuid())
+  amount    Int
+  type      CreditTransactionType
+  reason    String?
+  userId    String            @map("user_id")
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_transactions")
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  USAGE
+  REFUND
+  MONTHLY_RESET
+}
+
+model Recipe {
+  id          String   @id @default(uuid())
+  name        String
+  prompt      String
+  style       String?
+  isPublic    Boolean  @default(false) @map("is_public")
+  userId      String   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("recipes")
+}
+
+model Favorite {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  generationId String   @map("generation_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generation Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, generationId])
+  @@map("favorites")
+}
