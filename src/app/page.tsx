@@ -1,4 +1,4 @@
-import {
+import { 
   Upload,
   Palette,
   Sparkles,
