@@ -8,12 +8,26 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const dbUser = await prisma.user.findUnique({
+  let dbUser = await prisma.user.findUnique({
     where: { id: user.id },
     select: { id: true, email: true, name: true, avatarUrl: true, plan: true, credits: true },
   })
 
-  if (!dbUser) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  // Auto-create user record if it doesn't exist yet (first login after signup)
+  if (!dbUser) {
+    dbUser = await prisma.user.create({
+      data: {
+        id: user.id,
+        email: user.email!,
+        name: user.user_metadata?.name || user.user_metadata?.full_name || user.email!.split('@')[0],
+        avatarUrl: user.user_metadata?.avatar_url || null,
+        plan: 'FREE',
+        credits: 3,
+      },
+      select: { id: true, email: true, name: true, avatarUrl: true, plan: true, credits: true },
+    })
+  }
+
   return NextResponse.json(dbUser)
 }
 
