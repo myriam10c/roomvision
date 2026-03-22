@@ -4,9 +4,11 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { deductCredits } from '@/lib/credits'
 import { NextResponse } from 'next/server'
 
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent'
+
 export async function POST(req: Request) {
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
+  if (!process.env.GEMINI_API_KEY) {
+    return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 })
   }
 
   const supabase = await createSupabaseServer()
@@ -64,8 +66,10 @@ export async function POST(req: Request) {
 
     // Upload moodboard if provided
     let moodboardUrl: string | null = null
+    let moodboardB64: string | null = null
     if (moodboard) {
       const moodBuffer = Buffer.from(await moodboard.arrayBuffer())
+      moodboardB64 = moodBuffer.toString('base64')
       const moodPath = `rooms/${roomId}/${generation.id}/moodboard.jpg`
       await supabase.storage.from('roomvision').upload(moodPath, moodBuffer, {
         contentType: moodboard.type,
@@ -75,107 +79,88 @@ export async function POST(req: Request) {
       moodboardUrl = moodUrlData.publicUrl
     }
 
-    // Build the prompt for OpenAI
-    const systemPrompt = `You are an expert interior designer. Transform the given room photo into a ${style} style design. ${prompt ? `Additional instructions: ${prompt}` : ''} ${moodboardUrl ? 'Use the moodboard as inspiration for colors and materials.' : ''} Keep the same room layout and dimensions. Make it photorealistic.`
+    // Build the prompt for Gemini Nano Banana
+    const designPrompt = `Tu es un expert en design d'intérieur. Transforme cette photo de pièce en style "${style}". ${prompt ? `Instructions supplémentaires : ${prompt}` : ''} ${moodboardB64 ? 'Utilise le moodboard comme inspiration pour les couleurs et matériaux.' : ''} Garde la même disposition et les mêmes dimensions de la pièce. Rends le résultat photoréaliste et professionnel, comme une photo de magazine de décoration. Génère UNIQUEMENT l'image transformée, sans texte.`
 
-    // Call OpenAI GPT Image-1 (gpt-image-1 or dall-e-3 as fallback)
-    const openaiRes = await fetch('https://api.openai.com/v1/images/edits', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+    // Build Gemini API request parts
+    const parts: Array<Record<string, unknown>> = [
+      { text: designPrompt },
+      {
+        inline_data: {
+          mime_type: roomPhoto.type || 'image/jpeg',
+          data: photoBuffer.toString('base64'),
+        },
       },
-      body: (() => {
-        const fd = new FormData()
-        fd.append('image', new Blob([photoBuffer], { type: roomPhoto.type }), 'room.jpg')
-        fd.append('prompt', systemPrompt)
-        fd.append('model', 'gpt-image-1')
-        fd.append('n', '1')
-        fd.append('size', '1024x1024')
-        return fd
-      })(),
+    ]
+
+    // Add moodboard as additional image if provided
+    if (moodboardB64 && moodboard) {
+      parts.push({
+        inline_data: {
+          mime_type: moodboard.type || 'image/jpeg',
+          data: moodboardB64,
+        },
+      })
+    }
+
+    // Call Gemini Nano Banana API
+    const geminiRes = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: {
+          responseModalities: ['TEXT', 'IMAGE'],
+          imageConfig: {
+            aspectRatio: '4:3',
+            imageSize: '1K',
+          },
+        },
+      }),
     })
 
-    if (!openaiRes.ok) {
-      // Fallback to DALL-E 3 generation (without image edit)
-      const fallbackRes = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: `Interior design render of a room in ${style} style. ${prompt || ''} Photorealistic, high quality, professional interior design photography.`,
-          n: 1,
-          size: '1024x1024',
-          quality: 'hd',
-        }),
-      })
+    if (!geminiRes.ok) {
+      const errorData = await geminiRes.json().catch(() => ({}))
+      console.error('Gemini API error:', geminiRes.status, errorData)
+      throw new Error(`Gemini API returned ${geminiRes.status}`)
+    }
 
-      if (!fallbackRes.ok) {
-        throw new Error('Image generation failed')
+    const geminiData = await geminiRes.json()
+
+    // Extract generated image from response
+    let imageB64: string | null = null
+    let imageMimeType = 'image/png'
+
+    const candidates = geminiData.candidates || []
+    for (const candidate of candidates) {
+      const content = candidate.content || {}
+      const responseParts = content.parts || []
+      for (const part of responseParts) {
+        if (part.inline_data?.data) {
+          imageB64 = part.inline_data.data
+          imageMimeType = part.inline_data.mime_type || 'image/png'
+          break
+        }
       }
-
-      const fallbackData = await fallbackRes.json()
-      const generatedImageUrl = fallbackData.data[0]?.url || fallbackData.data[0]?.b64_json
-
-      if (!generatedImageUrl) throw new Error('No image returned')
-
-      // Download and store the generated image
-      const imgRes = await fetch(generatedImageUrl)
-      const imgBuffer = Buffer.from(await imgRes.arrayBuffer())
-      const resultPath = `rooms/${roomId}/${generation.id}/result.jpg`
-      await supabase.storage.from('roomvision').upload(resultPath, imgBuffer, {
-        contentType: 'image/jpeg',
-        upsert: true,
-      })
-      const { data: resultUrlData } = supabase.storage.from('roomvision').getPublicUrl(resultPath)
-
-      // Create variant and update generation
-      await prisma.generationVariant.create({
-        data: { imageUrl: resultUrlData.publicUrl, generationId: generation.id },
-      })
-
-      await prisma.generation.update({
-        where: { id: generation.id },
-        data: { status: 'COMPLETED', moodboardUrl },
-      })
-
-      // Deduct credits
-      await deductCredits(user.id, 1, `Generation ${generation.id}`)
-
-      return NextResponse.json({ imageUrl: resultUrlData.publicUrl, generationId: generation.id })
+      if (imageB64) break
     }
 
-    const openaiData = await openaiRes.json()
-    let generatedImageUrl = openaiData.data?.[0]?.url
-
-    // Handle b64_json response
-    if (!generatedImageUrl && openaiData.data?.[0]?.b64_json) {
-      const b64Buffer = Buffer.from(openaiData.data[0].b64_json, 'base64')
-      const resultPath = `rooms/${roomId}/${generation.id}/result.jpg`
-      await supabase.storage.from('roomvision').upload(resultPath, b64Buffer, {
-        contentType: 'image/png',
-        upsert: true,
-      })
-      const { data: resultUrlData } = supabase.storage.from('roomvision').getPublicUrl(resultPath)
-      generatedImageUrl = resultUrlData.publicUrl
-    } else if (generatedImageUrl) {
-      // Download and store
-      const imgRes = await fetch(generatedImageUrl)
-      const imgBuffer = Buffer.from(await imgRes.arrayBuffer())
-      const resultPath = `rooms/${roomId}/${generation.id}/result.jpg`
-      await supabase.storage.from('roomvision').upload(resultPath, imgBuffer, {
-        contentType: 'image/jpeg',
-        upsert: true,
-      })
-      const { data: resultUrlData } = supabase.storage.from('roomvision').getPublicUrl(resultPath)
-      generatedImageUrl = resultUrlData.publicUrl
+    if (!imageB64) {
+      throw new Error('No image returned from Gemini')
     }
 
-    if (!generatedImageUrl) throw new Error('No image returned')
+    // Upload generated image to Supabase Storage
+    const resultBuffer = Buffer.from(imageB64, 'base64')
+    const ext = imageMimeType.includes('png') ? 'png' : 'jpg'
+    const resultPath = `rooms/${roomId}/${generation.id}/result.${ext}`
+    await supabase.storage.from('roomvision').upload(resultPath, resultBuffer, {
+      contentType: imageMimeType,
+      upsert: true,
+    })
+    const { data: resultUrlData } = supabase.storage.from('roomvision').getPublicUrl(resultPath)
+    const generatedImageUrl = resultUrlData.publicUrl
 
-    // Create variant
+    // Create variant and update generation
     await prisma.generationVariant.create({
       data: { imageUrl: generatedImageUrl, generationId: generation.id },
     })
