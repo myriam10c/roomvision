@@ -28,3 +28,7 @@ export const STYLES = [
   'Minimaliste', 'Art Déco', 'Japandi', 'Mid-Century', 'Rustique',
   'Contemporain', 'Méditerranéen', 'Tropical', 'Côtier', 'Luxe',
 ]
+
+// Formats structurés pour les nouveaux composants
+export const DESIGN_STYLES = STYLES.map((s) => ({ value: s.toLowerCase().replace(/\s+/g, '-'), label: s }))
+export const ROOM_CATEGORIES = ROOM_TYPES.map((r) => ({ value: r.toLowerCase().replace(/\s+/g, '-'), label: r }))

@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, FolderOpen, Settings, CreditCard, LogOut } from 'lucide-react'
+import { LayoutDashboard, FolderOpen, Settings, CreditCard, LogOut, BookOpen } from 'lucide-react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/projects', label: 'Projets', icon: FolderOpen },
+  { href: '/recipes', label: 'Recettes', icon: BookOpen },
   { href: '/billing', label: 'Abonnement', icon: CreditCard },
   { href: '/settings', label: 'Paramètres', icon: Settings },
 ]

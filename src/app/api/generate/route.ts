@@ -3,8 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { deductCredits } from '@/lib/credits'
 import { NextResponse } from 'next/server'
+import { buildStructuredPrompt } from '@/lib/generation/prompt-builder'
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent'
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent'
 
 export async function POST(req: Request) {
   if (!process.env.GEMINI_API_KEY) {
@@ -27,6 +28,15 @@ export async function POST(req: Request) {
   const style = formData.get('style') as string
   const prompt = formData.get('prompt') as string
   const roomId = formData.get('roomId') as string
+  const transformationType = (formData.get('transformationType') as string) || 'FAITHFUL'
+  const intensity = (formData.get('intensity') as string) || 'MEDIUM'
+
+  // Collecter les images de référence supplémentaires
+  const referenceFiles: File[] = []
+  for (let i = 0; i < 4; i++) {
+    const ref = formData.get(`reference_${i}`) as File | null
+    if (ref) referenceFiles.push(ref)
+  }
 
   if (!roomPhoto || !style || !roomId) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -38,16 +48,20 @@ export async function POST(req: Request) {
   })
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
 
-  // Create generation record
+  // Create generation record with new fields
   const generation = await prisma.generation.create({
     data: {
       style,
       prompt: prompt || null,
       status: 'PROCESSING',
+      transformationType: transformationType as 'FAITHFUL' | 'CREATIVE',
+      intensity: intensity as 'LOW' | 'MEDIUM' | 'HIGH',
       roomId,
       userId: user.id,
     },
   })
+
+  const startTime = Date.now()
 
   try {
     // Upload room photo to Supabase Storage
@@ -79,12 +93,21 @@ export async function POST(req: Request) {
       moodboardUrl = moodUrlData.publicUrl
     }
 
-    // Build the prompt for Gemini Nano Banana
-    const designPrompt = `Tu es un expert en design d'intérieur. Transforme cette photo de pièce en style "${style}". ${prompt ? `Instructions supplémentaires : ${prompt}` : ''} ${moodboardB64 ? 'Utilise le moodboard comme inspiration pour les couleurs et matériaux.' : ''} Garde la même disposition et les mêmes dimensions de la pièce. Rends le résultat photoréaliste et professionnel, comme une photo de magazine de décoration. Génère UNIQUEMENT l'image transformée, sans texte.`
+    // Build structured prompt using the prompt builder
+    const structuredPrompt = buildStructuredPrompt({
+      roomImageUrl: photoUrlData.publicUrl,
+      referenceImageUrls: [],
+      userPrompt: prompt,
+      style,
+      transformationType: transformationType as 'FAITHFUL' | 'CREATIVE',
+      intensity: intensity as 'LOW' | 'MEDIUM' | 'HIGH',
+      numVariants: 1,
+      roomType: room.roomType || undefined,
+    })
 
     // Build Gemini API request parts
     const parts: Array<Record<string, unknown>> = [
-      { text: designPrompt },
+      { text: structuredPrompt },
       {
         inline_data: {
           mime_type: roomPhoto.type || 'image/jpeg',
@@ -96,6 +119,9 @@ export async function POST(req: Request) {
     // Add moodboard as additional image if provided
     if (moodboardB64 && moodboard) {
       parts.push({
+        text: 'This is the moodboard/inspiration image. Extract and faithfully reproduce the aesthetic, materials, colors, lighting, and atmosphere from this reference.',
+      })
+      parts.push({
         inline_data: {
           mime_type: moodboard.type || 'image/jpeg',
           data: moodboardB64,
@@ -103,7 +129,21 @@ export async function POST(req: Request) {
       })
     }
 
-    // Call Gemini Nano Banana API
+    // Add reference images
+    for (const refFile of referenceFiles) {
+      const refBuffer = Buffer.from(await refFile.arrayBuffer())
+      parts.push({
+        text: 'This is a style reference image. Extract the design language, materials, and atmosphere.',
+      })
+      parts.push({
+        inline_data: {
+          mime_type: refFile.type || 'image/jpeg',
+          data: refBuffer.toString('base64'),
+        },
+      })
+    }
+
+    // Call Gemini API
     const geminiRes = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -111,10 +151,7 @@ export async function POST(req: Request) {
         contents: [{ parts }],
         generationConfig: {
           responseModalities: ['TEXT', 'IMAGE'],
-          imageConfig: {
-            aspectRatio: '4:3',
-            imageSize: '1K',
-          },
+          temperature: 0.8,
         },
       }),
     })
@@ -160,6 +197,8 @@ export async function POST(req: Request) {
     const { data: resultUrlData } = supabase.storage.from('roomvision').getPublicUrl(resultPath)
     const generatedImageUrl = resultUrlData.publicUrl
 
+    const processingTimeMs = Date.now() - startTime
+
     // Create variant and update generation
     await prisma.generationVariant.create({
       data: { imageUrl: generatedImageUrl, generationId: generation.id },
@@ -167,7 +206,12 @@ export async function POST(req: Request) {
 
     await prisma.generation.update({
       where: { id: generation.id },
-      data: { status: 'COMPLETED', moodboardUrl },
+      data: {
+        status: 'COMPLETED',
+        moodboardUrl,
+        providerUsed: 'gemini',
+        processingTimeMs,
+      },
     })
 
     // Deduct credits
@@ -176,9 +220,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ imageUrl: generatedImageUrl, generationId: generation.id })
   } catch (err) {
     console.error('Generation error:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
     await prisma.generation.update({
       where: { id: generation.id },
-      data: { status: 'FAILED' },
+      data: { status: 'FAILED', errorMessage },
     })
     return NextResponse.json({ error: 'La génération a échoué. Veuillez réessayer.' }, { status: 500 })
   }

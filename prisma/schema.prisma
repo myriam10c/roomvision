@@ -1,3 +1,7 @@
+// ============================================================
+// RoomVision — Schema Prisma complet
+// ============================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,26 +12,7 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  avatarUrl String?  @map("avatar_url")
-  plan      Plan     @default(FREE)
-  credits   Int      @default(3)
-  stripeCustomerId    String? @unique @map("stripe_customer_id")
-  stripeSubscriptionId String? @map("stripe_subscription_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  projects          Project[]
-  generations       Generation[]
-  creditTransactions CreditTransaction[]
-  favorites         Favorite[]
-  recipes           Recipe[]
-
-  @@map("users")
-}
+// ---- Enums ----
 
 enum Plan {
   FREE
@@ -36,18 +21,85 @@ enum Plan {
   STUDIO
 }
 
+enum GenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum TransformationType {
+  FAITHFUL
+  CREATIVE
+}
+
+enum Intensity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  USAGE
+  REFUND
+  MONTHLY_RESET
+}
+
+enum RefImageType {
+  MOODBOARD
+  REFERENCE
+  ROOM_PHOTO
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// ---- Models ----
+
+model User {
+  id                   String              @id @default(uuid())
+  email                String              @unique
+  name                 String?
+  avatarUrl            String?             @map("avatar_url")
+  plan                 Plan                @default(FREE)
+  credits              Int                 @default(3)
+  stripeCustomerId     String?             @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?             @map("stripe_subscription_id")
+  currentTeamId        String?             @map("current_team_id")
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @default(now()) @updatedAt @map("updated_at")
+
+  projects             Project[]
+  generations          Generation[]
+  creditTransactions   CreditTransaction[]
+  recipes              Recipe[]
+  favorites            Favorite[]
+  teamMemberships      TeamMember[]
+
+  @@map("users")
+}
+
 model Project {
   id          String   @id @default(uuid())
   name        String
   description String?
+  clientName  String?  @map("client_name")
   coverUrl    String?  @map("cover_url")
   userId      String   @map("user_id")
+  teamId      String?  @map("team_id")
   createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rooms Room[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team        Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  rooms       Room[]
 
+  @@index([userId])
   @@map("projects")
 }
 
@@ -57,40 +109,46 @@ model Room {
   description String?
   photoUrl    String?  @map("photo_url")
   roomType    String?  @map("room_type")
+  notes       String?
   projectId   String   @map("project_id")
   createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
-  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  generations Generation[]
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  generations     Generation[]
+  referenceImages ReferenceImage[]
 
+  @@index([projectId])
   @@map("rooms")
 }
 
 model Generation {
-  id           String   @id @default(uuid())
-  prompt       String?
-  style        String?
-  moodboardUrl String?  @map("moodboard_url")
-  status       GenerationStatus @default(PENDING)
-  creditsUsed  Int      @default(1) @map("credits_used")
-  roomId       String   @map("room_id")
-  userId       String   @map("user_id")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id                 String             @id @default(uuid())
+  prompt             String?
+  style              String?
+  moodboardUrl       String?            @map("moodboard_url")
+  status             GenerationStatus   @default(PENDING)
+  transformationType TransformationType @default(FAITHFUL) @map("transformation_type")
+  intensity          Intensity          @default(MEDIUM)
+  creditsUsed        Int                @default(1) @map("credits_used")
+  providerUsed       String?            @map("provider_used")
+  processingTimeMs   Int?               @map("processing_time_ms")
+  costCents          Int?               @map("cost_cents")
+  errorMessage       String?            @map("error_message")
+  roomId             String             @map("room_id")
+  userId             String             @map("user_id")
+  createdAt          DateTime           @default(now()) @map("created_at")
 
-  room     Room                @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  variants GenerationVariant[]
-  favorites Favorite[]
+  room            Room               @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variants        GenerationVariant[]
+  referenceImages ReferenceImage[]
+  favorites       Favorite[]
 
+  @@index([userId])
+  @@index([roomId])
+  @@index([status])
   @@map("generations")
-}
-
-enum GenerationStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
 }
 
 model GenerationVariant {
@@ -105,34 +163,37 @@ model GenerationVariant {
   @@map("generation_variants")
 }
 
-model CreditTransaction {
-  id        String            @id @default(uuid())
-  amount    Int
-  type      CreditTransactionType
-  reason    String?
-  userId    String            @map("user_id")
-  createdAt DateTime          @default(now()) @map("created_at")
+model ReferenceImage {
+  id           String       @id @default(uuid())
+  url          String
+  thumbnailUrl String?      @map("thumbnail_url")
+  type         RefImageType
+  generationId String?      @map("generation_id")
+  roomId       String?      @map("room_id")
+  createdAt    DateTime     @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generation Generation? @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  room       Room?       @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  @@map("credit_transactions")
-}
-
-enum CreditTransactionType {
-  PURCHASE
-  USAGE
-  REFUND
-  MONTHLY_RESET
+  @@index([generationId])
+  @@index([roomId])
+  @@map("reference_images")
 }
 
 model Recipe {
-  id          String   @id @default(uuid())
-  name        String
-  prompt      String
-  style       String?
-  isPublic    Boolean  @default(false) @map("is_public")
-  userId      String   @map("user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id                 String             @id @default(uuid())
+  name               String
+  description        String?
+  prompt             String
+  style              String?
+  roomType           String?            @map("room_type")
+  intensity          Intensity          @default(MEDIUM)
+  transformationType TransformationType @default(FAITHFUL) @map("transformation_type")
+  referenceUrls      String[]           @default([]) @map("reference_urls")
+  thumbnailUrl       String?            @map("thumbnail_url")
+  isPublic           Boolean            @default(false) @map("is_public")
+  userId             String             @map("user_id")
+  createdAt          DateTime           @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -148,6 +209,51 @@ model Favorite {
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   generation Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, generationId])
+  @@index([userId])
   @@map("favorites")
+}
+
+model CreditTransaction {
+  id        String                @id @default(uuid())
+  amount    Int
+  type      CreditTransactionType
+  reason    String?
+  userId    String                @map("user_id")
+  createdAt DateTime              @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_transactions")
+}
+
+// ---- B2B (préparation) ----
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?  @map("logo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  members  TeamMember[]
+  projects Project[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(uuid())
+  role     TeamRole @default(MEMBER)
+  userId   String   @map("user_id")
+  teamId   String   @map("team_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+  @@map("team_members")
 }
