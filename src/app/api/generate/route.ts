@@ -10,7 +10,7 @@ import { buildStructuredPrompt } from '@/lib/generation/prompt-builder'
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent'
 const OPENAI_API_URL = 'https://api.openai.com/v1/images/edits'
 
-// ─── Provider: OpenAI (gpt-image-1) ───────────────────────────────
+// --- Provider: OpenAI (gpt-image-1) ---
 async function generateWithOpenAI(
   photoBuffer: Buffer, photoMimeType: string,
   moodboardBuffer: Buffer | null, moodboardMimeType: string | null,
@@ -26,24 +26,21 @@ async function generateWithOpenAI(
   formData.append('size', '1024x1024')
   formData.append('quality', 'low')
 
-  // Main room photo
   const photoBlob = new Blob([photoBuffer], { type: photoMimeType || 'image/jpeg' })
   formData.append('image', photoBlob, 'room.jpg')
 
-  // Optional moodboard
   if (moodboardBuffer) {
     const moodBlob = new Blob([moodboardBuffer], { type: moodboardMimeType || 'image/jpeg' })
     formData.append('image', moodBlob, 'moodboard.jpg')
   }
 
-  // Optional reference images (max 4 extra)
   for (let i = 0; i < referenceBuffers.length && i < 4; i++) {
     const ref = referenceBuffers[i]
     const refBlob = new Blob([ref.buffer], { type: ref.mimeType || 'image/jpeg' })
     formData.append('image', refBlob, `ref_${i}.jpg`)
   }
 
-  console.log('[generate] Calling OpenAI gpt-image-1…')
+  console.log('[generate] Calling OpenAI gpt-image-1...')
   const res = await fetch(OPENAI_API_URL, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${apiKey}` },
@@ -62,7 +59,7 @@ async function generateWithOpenAI(
   return { imageB64: b64, mimeType: 'image/png' }
 }
 
-// ─── Provider: Gemini (gemini-2.5-flash-image) ───────────────────
+// --- Provider: Gemini (gemini-2.5-flash-image) ---
 async function generateWithGemini(
   photoBuffer: Buffer, photoMimeType: string,
   moodboardBuffer: Buffer | null, moodboardMimeType: string | null,
@@ -78,16 +75,16 @@ async function generateWithGemini(
   ]
 
   if (moodboardBuffer) {
-    parts.push({ text: 'This is the moodboard / inspiration image. Use it to guide the overall aesthetic, colour palette and furniture style.' })
+    parts.push({ text: 'This is the moodboard / inspiration image.' })
     parts.push({ inline_data: { mime_type: moodboardMimeType || 'image/jpeg', data: moodboardBuffer.toString('base64') } })
   }
 
   for (const ref of referenceBuffers) {
-    parts.push({ text: 'This is a style reference image. Incorporate similar elements into the redesign.' })
+    parts.push({ text: 'This is a style reference image.' })
     parts.push({ inline_data: { mime_type: ref.mimeType || 'image/jpeg', data: ref.buffer.toString('base64') } })
   }
 
-  console.log('[generate] Calling Gemini…')
+  console.log('[generate] Calling Gemini...')
   const geminiRes = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -100,8 +97,8 @@ async function generateWithGemini(
   if (!geminiRes.ok) {
     const errText = await geminiRes.text().catch(() => '{}')
     console.error('[generate] Gemini error:', geminiRes.status, errText)
-    if (errText.includes('quota') || errText.includes('RESOURCE_EXHAUSTED') || errText.includes('limit: 0')) {
-      throw new Error(`GEMINI_QUOTA: ${geminiRes.status} – quota exceeded or billing inactive`)
+    if (errText.includes('quota') || errText.includes('RESOURCE_EXHAUSTED')) {
+      throw new Error(`GEMINI_QUOTA: ${geminiRes.status}`)
     }
     throw new Error(`GEMINI_ERR: ${geminiRes.status} ${errText.substring(0, 200)}`)
   }
@@ -125,17 +122,17 @@ async function generateWithGemini(
   return { imageB64, mimeType: imageMimeType }
 }
 
-// ─── Main POST handler ──────────────────────────────────────────
+// --- Main POST handler ---
 export async function POST(req: Request) {
   try {
     const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Check credits
-    const profile = await prisma.profile.findUnique({ where: { id: user.id }, select: { credits: true } })
-    if (!profile || profile.credits < 1) {
-      return NextResponse.json({ error: 'Crédits insuffisants' }, { status: 403 })
+    // Check credits (model is User, not Profile)
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { credits: true } })
+    if (!dbUser || dbUser.credits < 1) {
+      return NextResponse.json({ error: 'Credits insuffisants' }, { status: 403 })
     }
 
     // Parse form data
@@ -156,14 +153,14 @@ export async function POST(req: Request) {
     })
     if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
 
-    // Create generation record
+    // Create generation record (match schema: status enum, userId required, prompt field)
     const generation = await prisma.generation.create({
       data: {
         roomId,
+        userId: user.id,
         style,
-        colorPalette: colorPalette || null,
-        instructions: instructions || null,
-        status: 'processing',
+        prompt: instructions || null,
+        status: 'PROCESSING',
       },
     })
 
@@ -181,18 +178,18 @@ export async function POST(req: Request) {
         contentType: photoMimeType, upsert: true,
       })
 
-      // Update room with original photo path if not set
-      if (!room.originalPhoto) {
-        await prisma.room.update({ where: { id: roomId }, data: { originalPhoto: photoPath } })
+      // Update room with photo path if not set
+      if (!room.photoUrl) {
+        await prisma.room.update({ where: { id: roomId }, data: { photoUrl: photoPath } })
       }
-    } else if (room.originalPhoto) {
-      const { data: existingPhoto } = await supabase.storage.from('roomvision').download(room.originalPhoto)
+    } else if (room.photoUrl) {
+      const { data: existingPhoto } = await supabase.storage.from('roomvision').download(room.photoUrl)
       if (!existingPhoto) return NextResponse.json({ error: 'Could not load room photo' }, { status: 400 })
       photoBuffer = Buffer.from(await existingPhoto.arrayBuffer())
       photoMimeType = 'image/jpeg'
     } else {
-      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'failed' } })
-      return NextResponse.json({ error: 'No photo provided and no existing photo' }, { status: 400 })
+      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'FAILED' } })
+      return NextResponse.json({ error: 'No photo provided' }, { status: 400 })
     }
 
     // Moodboard (optional)
@@ -218,14 +215,14 @@ export async function POST(req: Request) {
     // Build prompt
     const structuredPrompt = buildStructuredPrompt({
       style,
-      roomType: room.type || 'room',
+      roomType: room.roomType || 'room',
       colorPalette: colorPalette || undefined,
       instructions: instructions || undefined,
     })
 
     console.log('[generate] Starting generation for room', roomId, 'style:', style)
 
-    // ─── Try providers in order: OpenAI → Gemini ───
+    // --- Try providers in order: OpenAI -> Gemini ---
     let imageB64: string | null = null
     let imageMimeType = 'image/png'
     let providerUsed = ''
@@ -254,20 +251,13 @@ export async function POST(req: Request) {
         const msg = err instanceof Error ? err.message : String(err)
         console.warn(`[generate] ${provider.name} failed: ${msg}`)
         lastError = err instanceof Error ? err : new Error(msg)
-        // If it's a SKIP error (no key), continue immediately
-        // Otherwise still try next provider
         continue
       }
     }
 
     if (!imageB64) {
-      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'failed' } })
-      const errorMsg = lastError?.message || 'All providers failed'
-      console.error('[generate] All providers failed:', errorMsg)
-      return NextResponse.json({
-        error: 'La génération a échoué avec tous les fournisseurs.',
-        detail: errorMsg,
-      }, { status: 502 })
+      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'FAILED', errorMessage: lastError?.message || 'All providers failed' } })
+      return NextResponse.json({ error: 'La generation a echoue.', detail: lastError?.message }, { status: 502 })
     }
 
     // Upload generated image to Supabase
@@ -275,29 +265,27 @@ export async function POST(req: Request) {
     const ext = imageMimeType.includes('png') ? 'png' : 'jpg'
     const resultPath = `${user.id}/${roomId}/gen_${generation.id}.${ext}`
 
-    const { error: uploadError } = await supabase.storage
-      .from('roomvision')
+    const { error: uploadError } = await supabase.storage.from('roomvision')
       .upload(resultPath, resultBuffer, { contentType: imageMimeType, upsert: true })
 
     if (uploadError) {
       console.error('[generate] Upload error:', uploadError)
-      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'failed' } })
+      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'FAILED' } })
       return NextResponse.json({ error: 'Failed to upload generated image' }, { status: 500 })
     }
 
-    // Create variant record
-    const variant = await prisma.variant.create({
+    // Create variant record (model is GenerationVariant, not Variant)
+    const variant = await prisma.generationVariant.create({
       data: {
         generationId: generation.id,
         imageUrl: resultPath,
-        provider: providerUsed,
       },
     })
 
     // Update generation status
     await prisma.generation.update({
       where: { id: generation.id },
-      data: { status: 'completed', selectedVariantId: variant.id },
+      data: { status: 'COMPLETED', providerUsed },
     })
 
     // Deduct credits
@@ -310,7 +298,7 @@ export async function POST(req: Request) {
       success: true,
       generation: {
         id: generation.id,
-        status: 'completed',
+        status: 'COMPLETED',
         provider: providerUsed,
         variant: { id: variant.id, imageUrl: publicUrl },
       },
