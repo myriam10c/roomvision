@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Upload, Sparkles, Loader2, X, Layers, Wand2, SlidersHorizontal } from 'lucide-react'
 import { STYLES } from '@/lib/utils'
 
-type Step = 'upload' | 'style' | 'generating' | 'done'
+type Step = 'configure' | 'generating' | 'done'
 type TransformationType = 'FAITHFUL' | 'CREATIVE'
 type Intensity = 'LOW' | 'MEDIUM' | 'HIGH'
 
@@ -15,7 +15,7 @@ export default function GeneratePage() {
   const projectId = params.id as string
   const roomId = params.roomId as string
 
-  const [step, setStep] = useState<Step>('upload')
+  const [step, setStep] = useState<Step>('configure')
   const [roomPhoto, setRoomPhoto] = useState<string | null>(null)
   const [roomPhotoFile, setRoomPhotoFile] = useState<File | null>(null)
   const [moodboard, setMoodboard] = useState<string | null>(null)
@@ -93,7 +93,7 @@ export default function GeneratePage() {
       setStep('done')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
-      setStep('style')
+      setStep('configure')
     }
   }
 
@@ -117,7 +117,7 @@ export default function GeneratePage() {
       </div>
 
       {/* Step 1: Upload */}
-      {(step === 'upload' || step === 'style') && (
+      {step === 'configure' && (
         <div className="space-y-5">
           {/* Room photo */}
           <div>
@@ -203,19 +203,12 @@ export default function GeneratePage() {
             <p className="mt-1 text-xs text-neutral-600">Photos d&apos;intérieurs qui illustrent le style désiré (max 4)</p>
           </div>
 
-          {roomPhoto && step === 'upload' && (
-            <button
-              onClick={() => setStep('style')}
-              className="w-full rounded-lg bg-[#d4a574] py-2.5 text-sm font-medium text-black transition hover:bg-[#e8c9a0]"
-            >
-              Continuer — Configurer la génération
-            </button>
-          )}
+
         </div>
       )}
 
       {/* Step 2: Style + options */}
-      {step === 'style' && (
+      {step === 'configure' && roomPhoto && (
         <div className="space-y-6">
           {/* Style selection */}
           <div>
@@ -360,7 +353,7 @@ export default function GeneratePage() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => { setStep('style'); setResult(null) }}
+              onClick={() => { setStep('configure'); setResult(null) }}
               className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm text-neutral-300 transition hover:bg-white/[0.04]"
             >
               Régénérer
