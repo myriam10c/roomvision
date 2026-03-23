@@ -141,6 +141,8 @@ export async function POST(req: Request) {
     const style = formData.get('style') as string || 'modern'
     const colorPalette = formData.get('colorPalette') as string || ''
     const instructions = formData.get('instructions') as string || ''
+    const transformationType = formData.get('transformationType') as string || 'FAITHFUL'
+    const intensity = formData.get('intensity') as string || 'MEDIUM'
     const photo = formData.get('photo') as File | null
     const moodboard = formData.get('moodboard') as File | null
 
@@ -224,8 +226,10 @@ export async function POST(req: Request) {
     const structuredPrompt = buildStructuredPrompt({
       style,
       roomType: room.roomType || 'room',
-      colorPalette: colorPalette || undefined,
-      instructions: instructions || undefined,
+      transformationType: transformationType || 'FAITHFUL',
+      intensity: intensity || 'MEDIUM',
+      userPrompt: instructions || undefined,
+      referenceImageUrls: [],
     })
 
     console.log('[generate] Starting generation for room', roomId, 'style:', style)
