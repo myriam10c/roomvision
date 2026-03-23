@@ -5,7 +5,7 @@ import { deductCredits } from '@/lib/credits'
 import { NextResponse } from 'next/server'
 import { buildStructuredPrompt } from '@/lib/generation/prompt-builder'
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/mohdels/gemini-2.5-flash-image:generateContent'
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent'
 
 export async function POST(req: Request) {
   if (!process.env.GEMINI_API_KEY) {
