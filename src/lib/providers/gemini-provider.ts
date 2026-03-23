@@ -96,7 +96,7 @@ export class GeminiProvider implements ImageProvider {
       costCents: cost.estimatedCents,
       finalPrompt: structuredPrompt,
       metadata: {
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-2.5-flash-image',
         numVariants: input.numVariants,
       },
     };
@@ -182,7 +182,7 @@ export class GeminiProvider implements ImageProvider {
    * Appelle l'API Gemini avec retry.
    */
   private async callGeminiAPI(parts: GeminiPart[]): Promise<GeminiResponse> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${this.config.apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${this.config.apiKey}`;
 
     let lastError: Error | null = null;
 
