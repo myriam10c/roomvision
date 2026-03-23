@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, FolderOpen, Sparkles, CreditCard, ArrowRight } from 'lucide-react'
+import { Plus, FolderOpen, Sparkles, CreditCard, ArrowRight, Wand2 } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServer()
@@ -92,7 +92,37 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Recent Projects */}
+      {/* Quick Generate */}
+      {dbUser.projects.some(p => p.rooms.length > 0) && (
+        <section>
+          <h2 className="mb-3 text-lg font-semibold text-white flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-[#d4a574]" />
+            Génération rapide
+          </h2>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {dbUser.projects.flatMap(project =>
+              project.rooms.map(room => (
+                <Link
+                  key={room.id}
+                  href={`/projects/${project.id}/rooms/${room.id}/generate`}
+                  className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 transition hover:border-[#d4a574]/30 hover:bg-[#d4a574]/5"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#d4a574]/10 transition group-hover:bg-[#d4a574]/20">
+                    <Wand2 className="h-4 w-4 text-[#d4a574]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-neutral-200 truncate group-hover:text-[#d4a574]">{room.name}</p>
+                    <p className="text-[11px] text-neutral-500 truncate">{project.name}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-neutral-600 transition group-hover:text-[#d4a574]" />
+                </Link>
+              ))
+            ).slice(0, 6)}
+          </div>
+        </section>
+      )}
+
+            {/* Recent Projects */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Projets récents</h2>
