@@ -183,10 +183,18 @@ export async function POST(req: Request) {
         await prisma.room.update({ where: { id: roomId }, data: { photoUrl: photoPath } })
       }
     } else if (room.photoUrl) {
-      const { data: existingPhoto } = await supabase.storage.from('roomvision').download(room.photoUrl)
+      // photoUrl may be a full public URL or a storage path
+      let existingPhoto: Blob | null = null
+      if (room.photoUrl.startsWith('http')) {
+        const photoRes = await fetch(room.photoUrl)
+        if (photoRes.ok) existingPhoto = await photoRes.blob()
+      } else {
+        const { data } = await supabase.storage.from('roomvision').download(room.photoUrl)
+        existingPhoto = data
+      }
       if (!existingPhoto) return NextResponse.json({ error: 'Could not load room photo' }, { status: 400 })
       photoBuffer = Buffer.from(await existingPhoto.arrayBuffer())
-      photoMimeType = 'image/jpeg'
+      photoMimeType = existingPhoto.type || 'image/jpeg'
     } else {
       await prisma.generation.update({ where: { id: generation.id }, data: { status: 'FAILED' } })
       return NextResponse.json({ error: 'No photo provided' }, { status: 400 })
