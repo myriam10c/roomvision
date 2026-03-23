@@ -88,8 +88,8 @@ export default function GeneratePage() {
 
       if (!res.ok) throw new Error(data.error || 'Erreur de génération')
 
-      setResult(data.imageUrl)
-      setGenerationId(data.generationId)
+      setResult(data.generation?.variant?.imageUrl || data.imageUrl)
+      setGenerationId(data.generation?.id || data.generationId)
       setStep('done')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
