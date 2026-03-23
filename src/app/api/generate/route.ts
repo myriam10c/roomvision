@@ -143,26 +143,50 @@ export async function POST(req: Request) {
       })
     }
 
-    // Call Gemini API
-    const geminiRes = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: {
-          responseModalities: ['TEXT', 'IMAGE'],
-          temperature: 0.8,
-        },
-      }),
-    })
+    // Call Gemini API with retry for rate limits
+    const MAX_RETRIES = 3
+    let geminiData: Record<string, unknown> | null = null
 
-    if (!geminiRes.ok) {
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      const geminiRes = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: {
+            responseModalities: ['TEXT', 'IMAGE'],
+            temperature: 0.8,
+          },
+        }),
+      })
+
+      if (geminiRes.ok) {
+        geminiData = await geminiRes.json()
+        break
+      }
+
       const errorData = await geminiRes.json().catch(() => ({}))
       console.error('Gemini API error:', geminiRes.status, errorData)
+
+      // Handle 429 rate limit with retry
+      if (geminiRes.status === 429 && attempt < MAX_RETRIES) {
+        const errorMsg = JSON.stringify(errorData)
+        // Check if this is a quota=0 issue (billing not enabled)
+        if (errorMsg.includes('limit: 0') || errorMsg.includes('free_tier')) {
+          throw new Error('QUOTA_ZERO: Gemini free tier does not support image generation. Please enable billing at https://aistudio.google.com/apikey')
+        }
+        const waitTime = Math.pow(2, attempt + 1) * 1000 // 2s, 4s, 8s
+        console.log(`Rate limited, retrying in ${waitTime}ms (attempt ${attempt + 1}/${MAX_RETRIES})`)
+        await new Promise(r => setTimeout(r, waitTime))
+        continue
+      }
+
       throw new Error(`Gemini API returned ${geminiRes.status}`)
     }
 
-    const geminiData = await geminiRes.json()
+    if (!geminiData) {
+      throw new Error('Gemini API: max retries exceeded')
+    }
 
     // Extract generated image from response
     let imageB64: string | null = null
@@ -225,6 +249,14 @@ export async function POST(req: Request) {
       where: { id: generation.id },
       data: { status: 'FAILED', errorMessage },
     })
+
+    // Return specific error messages based on the error type
+    if (errorMessage.includes('QUOTA_ZERO')) {
+      return NextResponse.json({ error: 'Le quota Gemini est épuisé. La facturation doit être activée sur Google AI Studio.' }, { status: 503 })
+    }
+    if (errorMessage.includes('429')) {
+      return NextResponse.json({ error: 'Le service est temporairement surchargé. Veuillez réessayer dans quelques minutes.' }, { status: 429 })
+    }
     return NextResponse.json({ error: 'La génération a échoué. Veuillez réessayer.' }, { status: 500 })
   }
 }
