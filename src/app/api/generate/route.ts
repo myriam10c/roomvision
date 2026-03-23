@@ -1,4 +1,6 @@
 export const dynamic = "force-dynamic"
+export const maxDuration = 60
+
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { deductCredits } from '@/lib/credits'
@@ -6,257 +8,317 @@ import { NextResponse } from 'next/server'
 import { buildStructuredPrompt } from '@/lib/generation/prompt-builder'
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent'
+const OPENAI_API_URL = 'https://api.openai.com/v1/images/edits'
 
-export async function POST(req: Request) {
-  if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 })
+// ─── Provider: OpenAI (gpt-image-1) ───────────────────────────────
+async function generateWithOpenAI(
+  photoBuffer: Buffer, photoMimeType: string,
+  moodboardBuffer: Buffer | null, moodboardMimeType: string | null,
+  referenceBuffers: { buffer: Buffer; mimeType: string }[],
+  structuredPrompt: string,
+): Promise<{ imageB64: string; mimeType: string }> {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error('OPENAI_SKIP: no API key configured')
+
+  const formData = new FormData()
+  formData.append('model', 'gpt-image-1')
+  formData.append('prompt', structuredPrompt)
+  formData.append('size', '1024x1024')
+  formData.append('quality', 'low')
+
+  // Main room photo
+  const photoBlob = new Blob([photoBuffer], { type: photoMimeType || 'image/jpeg' })
+  formData.append('image', photoBlob, 'room.jpg')
+
+  // Optional moodboard
+  if (moodboardBuffer) {
+    const moodBlob = new Blob([moodboardBuffer], { type: moodboardMimeType || 'image/jpeg' })
+    formData.append('image', moodBlob, 'moodboard.jpg')
   }
 
-  const supabase = await createSupabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  // Check credits
-  const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { credits: true } })
-  if (!dbUser || dbUser.credits < 1) {
-    return NextResponse.json({ error: 'Crédits insuffisants' }, { status: 402 })
+  // Optional reference images (max 4 extra)
+  for (let i = 0; i < referenceBuffers.length && i < 4; i++) {
+    const ref = referenceBuffers[i]
+    const refBlob = new Blob([ref.buffer], { type: ref.mimeType || 'image/jpeg' })
+    formData.append('image', refBlob, `ref_${i}.jpg`)
   }
 
-  const formData = await req.formData()
-  const roomPhoto = formData.get('roomPhoto') as File | null
-  const moodboard = formData.get('moodboard') as File | null
-  const style = formData.get('style') as string
-  const prompt = formData.get('prompt') as string
-  const roomId = formData.get('roomId') as string
-  const transformationType = (formData.get('transformationType') as string) || 'FAITHFUL'
-  const intensity = (formData.get('intensity') as string) || 'MEDIUM'
-
-  // Collecter les images de référence supplémentaires
-  const referenceFiles: File[] = []
-  for (let i = 0; i < 4; i++) {
-    const ref = formData.get(`reference_${i}`) as File | null
-    if (ref) referenceFiles.push(ref)
-  }
-
-  if (!roomPhoto || !style || !roomId) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-  }
-
-  // Verify room belongs to user
-  const room = await prisma.room.findFirst({
-    where: { id: roomId, project: { userId: user.id } },
-  })
-  if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
-
-  // Create generation record with new fields
-  const generation = await prisma.generation.create({
-    data: {
-      style,
-      prompt: prompt || null,
-      status: 'PROCESSING',
-      transformationType: transformationType as 'FAITHFUL' | 'CREATIVE',
-      intensity: intensity as 'LOW' | 'MEDIUM' | 'HIGH',
-      roomId,
-      userId: user.id,
-    },
+  console.log('[generate] Calling OpenAI gpt-image-1…')
+  const res = await fetch(OPENAI_API_URL, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    body: formData,
   })
 
-  const startTime = Date.now()
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '{}')
+    console.error('[generate] OpenAI error:', res.status, errBody)
+    throw new Error(`OPENAI_ERR: ${res.status} ${errBody.substring(0, 200)}`)
+  }
 
-  try {
-    // Upload room photo to Supabase Storage
-    const photoBuffer = Buffer.from(await roomPhoto.arrayBuffer())
-    const photoPath = `rooms/${roomId}/${generation.id}/photo.jpg`
-    await supabase.storage.from('roomvision').upload(photoPath, photoBuffer, {
-      contentType: roomPhoto.type,
-      upsert: true,
-    })
-    const { data: photoUrlData } = supabase.storage.from('roomvision').getPublicUrl(photoPath)
+  const data = await res.json()
+  const b64 = data?.data?.[0]?.b64_json
+  if (!b64) throw new Error('OPENAI_ERR: no image in response')
+  return { imageB64: b64, mimeType: 'image/png' }
+}
 
-    // Update room photo if not set
-    if (!room.photoUrl) {
-      await prisma.room.update({ where: { id: roomId }, data: { photoUrl: photoUrlData.publicUrl } })
+// ─── Provider: Gemini (gemini-2.5-flash-image) ───────────────────
+async function generateWithGemini(
+  photoBuffer: Buffer, photoMimeType: string,
+  moodboardBuffer: Buffer | null, moodboardMimeType: string | null,
+  referenceBuffers: { buffer: Buffer; mimeType: string }[],
+  structuredPrompt: string,
+): Promise<{ imageB64: string; mimeType: string }> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) throw new Error('GEMINI_SKIP: no API key configured')
+
+  const parts: Array<Record<string, unknown>> = [
+    { text: structuredPrompt },
+    { inline_data: { mime_type: photoMimeType || 'image/jpeg', data: photoBuffer.toString('base64') } },
+  ]
+
+  if (moodboardBuffer) {
+    parts.push({ text: 'This is the moodboard / inspiration image. Use it to guide the overall aesthetic, colour palette and furniture style.' })
+    parts.push({ inline_data: { mime_type: moodboardMimeType || 'image/jpeg', data: moodboardBuffer.toString('base64') } })
+  }
+
+  for (const ref of referenceBuffers) {
+    parts.push({ text: 'This is a style reference image. Incorporate similar elements into the redesign.' })
+    parts.push({ inline_data: { mime_type: ref.mimeType || 'image/jpeg', data: ref.buffer.toString('base64') } })
+  }
+
+  console.log('[generate] Calling Gemini…')
+  const geminiRes = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts }],
+      generationConfig: { responseModalities: ['TEXT', 'IMAGE'], temperature: 0.8 },
+    }),
+  })
+
+  if (!geminiRes.ok) {
+    const errText = await geminiRes.text().catch(() => '{}')
+    console.error('[generate] Gemini error:', geminiRes.status, errText)
+    if (errText.includes('quota') || errText.includes('RESOURCE_EXHAUSTED') || errText.includes('limit: 0')) {
+      throw new Error(`GEMINI_QUOTA: ${geminiRes.status} – quota exceeded or billing inactive`)
     }
+    throw new Error(`GEMINI_ERR: ${geminiRes.status} ${errText.substring(0, 200)}`)
+  }
 
-    // Upload moodboard if provided
-    let moodboardUrl: string | null = null
-    let moodboardB64: string | null = null
-    if (moodboard) {
-      const moodBuffer = Buffer.from(await moodboard.arrayBuffer())
-      moodboardB64 = moodBuffer.toString('base64')
-      const moodPath = `rooms/${roomId}/${generation.id}/moodboard.jpg`
-      await supabase.storage.from('roomvision').upload(moodPath, moodBuffer, {
-        contentType: moodboard.type,
-        upsert: true,
-      })
-      const { data: moodUrlData } = supabase.storage.from('roomvision').getPublicUrl(moodPath)
-      moodboardUrl = moodUrlData.publicUrl
-    }
+  const geminiData = await geminiRes.json()
+  let imageB64: string | null = null
+  let imageMimeType = 'image/png'
 
-    // Build structured prompt using the prompt builder
-    const structuredPrompt = buildStructuredPrompt({
-      roomImageUrl: photoUrlData.publicUrl,
-      referenceImageUrls: [],
-      userPrompt: prompt,
-      style,
-      transformationType: transformationType as 'FAITHFUL' | 'CREATIVE',
-      intensity: intensity as 'LOW' | 'MEDIUM' | 'HIGH',
-      numVariants: 1,
-      roomType: room.roomType || undefined,
-    })
-
-    // Build Gemini API request parts
-    const parts: Array<Record<string, unknown>> = [
-      { text: structuredPrompt },
-      {
-        inline_data: {
-          mime_type: roomPhoto.type || 'image/jpeg',
-          data: photoBuffer.toString('base64'),
-        },
-      },
-    ]
-
-    // Add moodboard as additional image if provided
-    if (moodboardB64 && moodboard) {
-      parts.push({
-        text: 'This is the moodboard/inspiration image. Extract and faithfully reproduce the aesthetic, materials, colors, lighting, and atmosphere from this reference.',
-      })
-      parts.push({
-        inline_data: {
-          mime_type: moodboard.type || 'image/jpeg',
-          data: moodboardB64,
-        },
-      })
-    }
-
-    // Add reference images
-    for (const refFile of referenceFiles) {
-      const refBuffer = Buffer.from(await refFile.arrayBuffer())
-      parts.push({
-        text: 'This is a style reference image. Extract the design language, materials, and atmosphere.',
-      })
-      parts.push({
-        inline_data: {
-          mime_type: refFile.type || 'image/jpeg',
-          data: refBuffer.toString('base64'),
-        },
-      })
-    }
-
-    // Call Gemini API with retry for rate limits
-    const MAX_RETRIES = 3
-    let geminiData: Record<string, unknown> | null = null
-
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      const geminiRes = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            responseModalities: ['TEXT', 'IMAGE'],
-            temperature: 0.8,
-          },
-        }),
-      })
-
-      if (geminiRes.ok) {
-        geminiData = await geminiRes.json()
+  for (const candidate of geminiData.candidates || []) {
+    for (const part of candidate.content?.parts || []) {
+      if (part.inline_data?.data) {
+        imageB64 = part.inline_data.data
+        imageMimeType = part.inline_data.mime_type || 'image/png'
         break
       }
+    }
+    if (imageB64) break
+  }
 
-      const errorData = await geminiRes.json().catch(() => ({}))
-      console.error('Gemini API error:', geminiRes.status, errorData)
+  if (!imageB64) throw new Error('GEMINI_ERR: no image found in response')
+  return { imageB64, mimeType: imageMimeType }
+}
 
-      // Handle 429 rate limit with retry
-      if (geminiRes.status === 429 && attempt < MAX_RETRIES) {
-        const errorMsg = JSON.stringify(errorData)
-        // Check if this is a quota=0 issue (billing not enabled)
-        if (errorMsg.includes('limit: 0') || errorMsg.includes('free_tier')) {
-          throw new Error('QUOTA_ZERO: Gemini free tier does not support image generation. Please enable billing at https://aistudio.google.com/apikey')
-        }
-        const waitTime = Math.pow(2, attempt + 1) * 1000 // 2s, 4s, 8s
-        console.log(`Rate limited, retrying in ${waitTime}ms (attempt ${attempt + 1}/${MAX_RETRIES})`)
-        await new Promise(r => setTimeout(r, waitTime))
-        continue
+// ─── Main POST handler ──────────────────────────────────────────
+export async function POST(req: Request) {
+  try {
+    const supabase = await createSupabaseServer()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Check credits
+    const profile = await prisma.profile.findUnique({ where: { id: user.id }, select: { credits: true } })
+    if (!profile || profile.credits < 1) {
+      return NextResponse.json({ error: 'Crédits insuffisants' }, { status: 403 })
+    }
+
+    // Parse form data
+    const formData = await req.formData()
+    const roomId = formData.get('roomId') as string
+    const style = formData.get('style') as string || 'modern'
+    const colorPalette = formData.get('colorPalette') as string || ''
+    const instructions = formData.get('instructions') as string || ''
+    const photo = formData.get('photo') as File | null
+    const moodboard = formData.get('moodboard') as File | null
+
+    if (!roomId) return NextResponse.json({ error: 'roomId is required' }, { status: 400 })
+
+    // Verify room belongs to user
+    const room = await prisma.room.findFirst({
+      where: { id: roomId, project: { userId: user.id } },
+      include: { project: true },
+    })
+    if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+
+    // Create generation record
+    const generation = await prisma.generation.create({
+      data: {
+        roomId,
+        style,
+        colorPalette: colorPalette || null,
+        instructions: instructions || null,
+        status: 'processing',
+      },
+    })
+
+    // Upload original photo to Supabase Storage
+    let photoBuffer: Buffer
+    let photoMimeType: string
+
+    if (photo) {
+      const arrayBuf = await photo.arrayBuffer()
+      photoBuffer = Buffer.from(arrayBuf)
+      photoMimeType = photo.type || 'image/jpeg'
+
+      const photoPath = `${user.id}/${roomId}/original_${Date.now()}.jpg`
+      await supabase.storage.from('roomvision').upload(photoPath, photoBuffer, {
+        contentType: photoMimeType, upsert: true,
+      })
+
+      // Update room with original photo path if not set
+      if (!room.originalPhoto) {
+        await prisma.room.update({ where: { id: roomId }, data: { originalPhoto: photoPath } })
       }
-
-      throw new Error(`Gemini API returned ${geminiRes.status}`)
+    } else if (room.originalPhoto) {
+      const { data: existingPhoto } = await supabase.storage.from('roomvision').download(room.originalPhoto)
+      if (!existingPhoto) return NextResponse.json({ error: 'Could not load room photo' }, { status: 400 })
+      photoBuffer = Buffer.from(await existingPhoto.arrayBuffer())
+      photoMimeType = 'image/jpeg'
+    } else {
+      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'failed' } })
+      return NextResponse.json({ error: 'No photo provided and no existing photo' }, { status: 400 })
     }
 
-    if (!geminiData) {
-      throw new Error('Gemini API: max retries exceeded')
+    // Moodboard (optional)
+    let moodboardBuffer: Buffer | null = null
+    let moodboardMimeType: string | null = null
+    if (moodboard) {
+      moodboardBuffer = Buffer.from(await moodboard.arrayBuffer())
+      moodboardMimeType = moodboard.type || 'image/jpeg'
     }
 
-    // Extract generated image from response
+    // Reference images
+    const referenceBuffers: { buffer: Buffer; mimeType: string }[] = []
+    for (let i = 0; i < 5; i++) {
+      const ref = formData.get(`reference_${i}`) as File | null
+      if (ref) {
+        referenceBuffers.push({
+          buffer: Buffer.from(await ref.arrayBuffer()),
+          mimeType: ref.type || 'image/jpeg',
+        })
+      }
+    }
+
+    // Build prompt
+    const structuredPrompt = buildStructuredPrompt({
+      style,
+      roomType: room.type || 'room',
+      colorPalette: colorPalette || undefined,
+      instructions: instructions || undefined,
+    })
+
+    console.log('[generate] Starting generation for room', roomId, 'style:', style)
+
+    // ─── Try providers in order: OpenAI → Gemini ───
     let imageB64: string | null = null
     let imageMimeType = 'image/png'
+    let providerUsed = ''
+    let lastError: Error | null = null
 
-    const candidates = geminiData.candidates || []
-    for (const candidate of candidates) {
-      const content = candidate.content || {}
-      const responseParts = content.parts || []
-      for (const part of responseParts) {
-        if (part.inline_data?.data) {
-          imageB64 = part.inline_data.data
-          imageMimeType = part.inline_data.mime_type || 'image/png'
-          break
-        }
+    const providers = [
+      { name: 'openai', fn: generateWithOpenAI },
+      { name: 'gemini', fn: generateWithGemini },
+    ]
+
+    for (const provider of providers) {
+      try {
+        console.log(`[generate] Trying provider: ${provider.name}`)
+        const result = await provider.fn(
+          photoBuffer, photoMimeType,
+          moodboardBuffer, moodboardMimeType,
+          referenceBuffers,
+          structuredPrompt,
+        )
+        imageB64 = result.imageB64
+        imageMimeType = result.mimeType
+        providerUsed = provider.name
+        console.log(`[generate] Success with ${provider.name}`)
+        break
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.warn(`[generate] ${provider.name} failed: ${msg}`)
+        lastError = err instanceof Error ? err : new Error(msg)
+        // If it's a SKIP error (no key), continue immediately
+        // Otherwise still try next provider
+        continue
       }
-      if (imageB64) break
     }
 
     if (!imageB64) {
-      throw new Error('No image returned from Gemini')
+      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'failed' } })
+      const errorMsg = lastError?.message || 'All providers failed'
+      console.error('[generate] All providers failed:', errorMsg)
+      return NextResponse.json({
+        error: 'La génération a échoué avec tous les fournisseurs.',
+        detail: errorMsg,
+      }, { status: 502 })
     }
 
-    // Upload generated image to Supabase Storage
+    // Upload generated image to Supabase
     const resultBuffer = Buffer.from(imageB64, 'base64')
     const ext = imageMimeType.includes('png') ? 'png' : 'jpg'
-    const resultPath = `rooms/${roomId}/${generation.id}/result.${ext}`
-    await supabase.storage.from('roomvision').upload(resultPath, resultBuffer, {
-      contentType: imageMimeType,
-      upsert: true,
-    })
-    const { data: resultUrlData } = supabase.storage.from('roomvision').getPublicUrl(resultPath)
-    const generatedImageUrl = resultUrlData.publicUrl
+    const resultPath = `${user.id}/${roomId}/gen_${generation.id}.${ext}`
 
-    const processingTimeMs = Date.now() - startTime
+    const { error: uploadError } = await supabase.storage
+      .from('roomvision')
+      .upload(resultPath, resultBuffer, { contentType: imageMimeType, upsert: true })
 
-    // Create variant and update generation
-    await prisma.generationVariant.create({
-      data: { imageUrl: generatedImageUrl, generationId: generation.id },
-    })
+    if (uploadError) {
+      console.error('[generate] Upload error:', uploadError)
+      await prisma.generation.update({ where: { id: generation.id }, data: { status: 'failed' } })
+      return NextResponse.json({ error: 'Failed to upload generated image' }, { status: 500 })
+    }
 
-    await prisma.generation.update({
-      where: { id: generation.id },
+    // Create variant record
+    const variant = await prisma.variant.create({
       data: {
-        status: 'COMPLETED',
-        moodboardUrl,
-        providerUsed: 'gemini',
-        processingTimeMs,
+        generationId: generation.id,
+        imageUrl: resultPath,
+        provider: providerUsed,
       },
     })
 
-    // Deduct credits
-    await deductCredits(user.id, 1, `Generation ${generation.id}`)
-
-    return NextResponse.json({ imageUrl: generatedImageUrl, generationId: generation.id })
-  } catch (err) {
-    console.error('Generation error:', err)
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    // Update generation status
     await prisma.generation.update({
       where: { id: generation.id },
-      data: { status: 'FAILED', errorMessage },
+      data: { status: 'completed', selectedVariantId: variant.id },
     })
 
-    // Return specific error messages based on the error type
-    if (errorMessage.includes('QUOTA_ZERO')) {
-      return NextResponse.json({ error: 'Le quota Gemini est épuisé. La facturation doit être activée sur Google AI Studio.' }, { status: 503 })
-    }
-    if (errorMessage.includes('429')) {
-      return NextResponse.json({ error: 'Le service est temporairement surchargé. Veuillez réessayer dans quelques minutes.' }, { status: 429 })
-    }
-    return NextResponse.json({ error: 'La génération a échoué. Veuillez réessayer.' }, { status: 500 })
+    // Deduct credits
+    await deductCredits(user.id, 1)
+
+    // Public URL
+    const { data: { publicUrl } } = supabase.storage.from('roomvision').getPublicUrl(resultPath)
+
+    return NextResponse.json({
+      success: true,
+      generation: {
+        id: generation.id,
+        status: 'completed',
+        provider: providerUsed,
+        variant: { id: variant.id, imageUrl: publicUrl },
+      },
+    })
+
+  } catch (error: unknown) {
+    console.error('[generate] Unexpected error:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: 'Internal server error', detail: message }, { status: 500 })
   }
 }
