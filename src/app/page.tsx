@@ -1,4 +1,5 @@
-import { 
+import Link from "next/link";
+import {
   Upload,
   Palette,
   Sparkles,
@@ -43,12 +44,12 @@ export default function Home() {
             </a>
           </div>
           <div className="flex items-center gap-3">
-            <button className="text-sm text-white/60 hover:text-white transition-colors px-4 py-2">
+            <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors px-4 py-2">
               Se connecter
-            </button>
-            <button className="text-sm bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-5 py-2 rounded-full hover:opacity-90 transition-opacity">
+            </Link>
+            <Link href="/signup" className="text-sm bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-5 py-2 rounded-full hover:opacity-90 transition-opacity">
               Essai gratuit
-            </button>
+            </Link>
           </div>
         </div>
       </nav>
@@ -80,10 +81,10 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <button className="group flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-8 py-3.5 rounded-full text-base hover:opacity-90 transition-all hover:shadow-[0_0_40px_rgba(212,165,116,0.3)]">
+            <Link href="/signup" className="group flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-8 py-3.5 rounded-full text-base hover:opacity-90 transition-all hover:shadow-[0_0_40px_rgba(212,165,116,0.3)]">
               Essai gratuit — 14 jours
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </button>
+            </Link>
             <button className="flex items-center gap-2 text-white/60 hover:text-white px-6 py-3.5 rounded-full border border-white/10 hover:border-white/20 transition-all text-base">
               Voir une démo
             </button>
@@ -365,15 +366,16 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <button
-                  className={`w-full py-3 rounded-full text-sm font-semibold transition-all ${
+                <Link
+                  href="/signup"
+                  className={`block text-center w-full py-3 rounded-full text-sm font-semibold transition-all ${
                     plan.popular
                       ? "bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] hover:opacity-90 hover:shadow-[0_0_30px_rgba(212,165,116,0.2)]"
                       : "border border-white/10 text-white hover:border-[#d4a574]/30 hover:text-[#d4a574]"
                   }`}
                 >
                   Commencer l&apos;essai gratuit
-                </button>
+                </Link>
               </div>
             ))}
           </div>
@@ -400,10 +402,10 @@ export default function Home() {
             Rejoignez les designers qui ont déjà adopté RoomVision pour impressionner
             leurs clients.
           </p>
-          <button className="group inline-flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-8 py-4 rounded-full text-base hover:opacity-90 transition-all hover:shadow-[0_0_50px_rgba(212,165,116,0.3)]">
+          <Link href="/signup" className="group inline-flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#c9956b] text-[#0a0a0a] font-semibold px-8 py-4 rounded-full text-base hover:opacity-90 transition-all hover:shadow-[0_0_50px_rgba(212,165,116,0.3)]">
             Démarrer gratuitement
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+          </Link>
         </div>
       </section>
 
